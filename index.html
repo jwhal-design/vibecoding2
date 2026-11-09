@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibe Coding 2.0: Level Up Your Classroom Builds</title>
+<!--
+  TODO before the conference:
+  1. Swap in your own prompt wording anywhere you like. All prompts live in <pre> blocks.
+  Present mode: click Present in the top bar. Arrow keys, Page Up/Down, or a clicker move between slides. Esc exits.
+  The quick check is embedded at the bottom of the script (QUICK_CHECK_B64) so it only exists here as a download.
+  To update it, re-encode the new file as base64 and replace that string. Don't upload the .html to the repo,
+  or GitHub Pages will serve it as a live page.
+  Nothing on this page stores or sends data. The vote board and prompt builder run in the browser only.
+-->
+<style>
+:root{
+  /* Palette inspired by 1980s flat-color poster art: cool white, true black, magenta, teal, blush, lavender */
+  --paper:#F6F5F8; --ink:#000000; --muted:#4F4A58;
+  --accent:#C2185B; --teal:#1B8A8C; --blush:#F3B5C8; --lav:#B6A8DA;
+  --panel:#FFFFFF; --line:#CFC8D8;
+  --mark:#C2185B; --on-mark:#FFFFFF; --good:#1B8A8C; --code-bg:#F3F0F6;
+  --display: Futura, "Futura PT", "Century Gothic", "Avenir Next", "Trebuchet MS", sans-serif;
+  --body: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#000000; --ink:#F6F5F8; --muted:#B5AEC0;
+    --accent:#FF5FA2; --teal:#3CC4C0; --blush:#8E3A5E; --lav:#5A4D8C;
+    --panel:#15131A; --line:#3A3545;
+    --mark:#FF5FA2; --on-mark:#000000; --good:#3CC4C0; --code-bg:#121016;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:20px; line-height:1.6;
+}
+a{color:var(--accent); text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--accent); outline-offset:3px; border-radius:0}
+
+/* Nav */
+nav{
+  position:sticky; top:0; z-index:5; background:var(--paper);
+  border-bottom:1.5px solid var(--ink);
+}
+nav ul{
+  list-style:none; margin:0 auto; padding:.5rem 1rem; max-width:1040px;
+  display:flex; gap:1.25rem; overflow-x:auto; white-space:nowrap;
+}
+nav a{font-family:var(--display); font-weight:500; font-size:17px; text-decoration:none; color:var(--muted)}
+nav a:hover{color:var(--accent)}
+
+/* Hero: the one bold moment. Hard-edged flat color planes and a crisp black line */
+.hero{background:var(--paper); border-bottom:1.5px solid var(--ink); overflow:hidden}
+/* Present-mode script wraps each slide's contents in .fit, so the grid lives there */
+.hero > .fit{display:grid; grid-template-columns:minmax(0,1fr) 40%}
+.hero-inner{max-width:none; margin:0 0 0 max(0px, calc((100vw - 1040px) / 2)); padding:5rem 2.5rem 4rem 1.25rem}
+.hero-art{position:relative; min-height:260px}
+.hero-art svg{position:absolute; inset:0; width:100%; height:100%; display:block}
+.p-blush{fill:var(--blush)} .p-teal{fill:var(--teal)} .p-lav{fill:var(--lav)} .p-ink{fill:var(--ink)}
+.p-line{fill:none; stroke:var(--ink); stroke-width:3}
+@media (max-width:900px){
+  .hero > .fit{grid-template-columns:1fr}
+  .hero-art{order:-1; min-height:150px}
+}
+.hero h1{
+  font-family:var(--display); font-weight:500; margin:0;
+  font-size:clamp(3.2rem, 9vw, 7rem); line-height:.95; letter-spacing:.005em;
+}
+.hero .sub{
+  font-family:var(--display); font-weight:400; margin:.6rem 0 1.6rem;
+  font-size:clamp(1.4rem, 3.4vw, 2.1rem); color:var(--muted);
+}
+.file-chip{
+  display:inline-flex; align-items:center; gap:.6rem;
+  background:var(--panel); border:2px solid var(--ink); border-radius:0;
+  padding:.45rem .9rem; font-family:var(--mono); font-size:18px;
+  box-shadow:8px 8px 0 var(--blush);
+}
+.file-chip svg{flex:none}
+.hero .lede{max-width:34em; margin:1.6rem 0 0}
+.hero .meta{color:var(--muted); font-size:17px; margin-top:1.2rem}
+
+/* Sections */
+main{max-width:1040px; margin:0 auto; padding:0 1.25rem 4rem}
+section{padding-top:3.5rem; scroll-margin-top:3rem}
+h2{font-family:var(--display); font-weight:500; font-size:clamp(2rem,5vw,2.8rem); line-height:1.1; margin:0 0 .5rem; letter-spacing:-.015em}
+h3{font-family:var(--display); font-weight:600; font-size:1.3rem; line-height:1.25; margin:0 0 .35rem}
+.intro{max-width:36em; color:var(--muted); margin:0 0 1.75rem}
+p{max-width:38em}
+
+/* Show and tell */
+.rung{border-top:2px solid var(--line); padding:1.75rem 0}
+.rung:last-child{border-bottom:2px solid var(--line)}
+.rung-head{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.5rem 1.5rem}
+.level{font-family:var(--display); font-weight:500; color:var(--accent); font-size:1.1rem}
+.compare{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare h4{font-family:var(--display); font-size:1rem; margin:0 0 .35rem; color:var(--muted)}
+.compare .v1 pre{opacity:.85}
+.demo-link{font-family:var(--display); font-weight:500; font-size:18px}
+button.demo-link{font-size:17px}
+
+/* Prompt blocks */
+pre{
+  margin:0; white-space:pre-wrap; word-wrap:break-word;
+  font-family:var(--mono); font-size:16.5px; line-height:1.55;
+  background:var(--code-bg); border:2px solid var(--line); border-radius:0; padding:.9rem 1rem;
+}
+.prompt{margin-top:.75rem}
+.prompt-bar{display:flex; justify-content:flex-end; margin-bottom:.35rem}
+button{
+  font-family:var(--display); font-weight:500; font-size:17px; cursor:pointer;
+  color:var(--ink); background:var(--panel); border:2px solid var(--ink); border-radius:0;
+  padding:.45rem .9rem; min-height:44px;
+}
+button:hover{background:var(--mark); color:var(--on-mark)}
+button.copied{background:var(--good); border-color:var(--good); color:var(--on-mark)}
+
+/* Four moves */
+.moves{list-style:none; padding:0; margin:0; counter-reset:move}
+.moves > li{counter-increment:move; display:grid; grid-template-columns:3.2rem 1fr; gap:0 1rem; padding:1.5rem 0; border-top:2px solid var(--line)}
+.moves > li::before{
+  content:counter(move); font-family:var(--display); font-weight:500; font-size:2.6rem; line-height:1; color:var(--accent);
+}
+details summary{cursor:pointer; font-family:var(--display); font-weight:500; color:var(--accent); margin-top:.5rem; min-height:44px; display:flex; align-items:center}
+.moves > li.not-needed{counter-increment:none; display:block; background:var(--panel); border:2px dashed var(--line); border-radius:0; padding:1.25rem 1.4rem; margin-top:1.5rem}
+.moves > li.not-needed::before{content:none}
+.not-needed h3{margin-bottom:.25rem}
+
+/* Vote board */
+.board{display:grid; gap:1.4rem}
+fieldset{border:0; padding:0; margin:0}
+legend{font-family:var(--display); font-weight:600; font-size:1.2rem; margin-bottom:.5rem; padding:0}
+.choices{display:flex; flex-wrap:wrap; gap:.6rem}
+.choices button{font-size:18px; padding:.6rem 1rem}
+.choices button[aria-pressed="true"]{background:var(--mark); color:var(--on-mark); border-color:var(--ink); box-shadow:4px 4px 0 var(--teal)}
+.mech-note{font-size:17px; color:var(--muted); margin:.5rem 0 0}
+input[type=text], select{
+  font-family:var(--body); font-size:19px; color:var(--ink); background:var(--panel);
+  border:2px solid var(--ink); border-radius:0; padding:.5rem .7rem; width:100%; max-width:34rem; min-height:48px;
+}
+label{display:block; font-family:var(--display); font-weight:500; font-size:18px; margin-bottom:.3rem}
+.spec-card{
+  background:var(--panel); border:3px solid var(--ink); border-radius:0; padding:1.4rem 1.5rem;
+  box-shadow:12px 12px 0 var(--blush); margin-top:.5rem;
+}
+.spec-card p{font-family:var(--display); font-weight:500; font-size:clamp(1.3rem,3vw,1.75rem); line-height:1.35; margin:0; max-width:none}
+.spec-card .blank{background:var(--mark); color:var(--on-mark); padding:0 .3em; border-radius:0; box-decoration-break:clone; -webkit-box-decoration-break:clone}
+.row{display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem}
+
+/* Own the file */
+.cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:1.5rem}
+.panel{background:var(--panel); border:1.5px solid var(--ink); border-radius:0; padding:1.25rem 1.4rem}
+.panel ul, .panel ol{padding-left:1.2rem; margin:.5rem 0 0}
+.panel li{margin-bottom:.55rem}
+.panel .k{font-family:var(--display); font-weight:600}
+.warn{border-left:5px solid var(--mark); padding:.2rem 0 .2rem .9rem; margin-top:1rem; font-size:18px}
+code{font-family:var(--mono); font-size:.88em; background:var(--code-bg); border:1px solid var(--line); border-radius:0; padding:.05em .3em; word-break:break-word}
+
+/* Builder */
+.builder{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem 1.5rem}
+.builder .full{grid-column:1 / -1}
+@media (max-width:760px){.builder{grid-template-columns:1fr}}
+.hint{font-size:16px; color:var(--muted); margin:.25rem 0 0}
+.output h3{margin-top:2rem}
+.privacy{font-size:17px; color:var(--muted)}
+
+/* The line */
+.checks{list-style:none; padding:0; margin:0}
+.checks li{padding:.8rem 0; border-top:2px solid var(--line)}
+.checks li:last-child{border-bottom:2px solid var(--line)}
+.checks .q{font-family:var(--display); font-weight:600}
+
+.carry{background:var(--panel); border:2px solid var(--line); border-left:6px solid var(--good); border-radius:0; padding:1.1rem 1.3rem; margin-top:1.5rem}
+.carry p{margin:.2rem 0 0}
+.tabs{display:flex; flex-wrap:wrap; gap:.6rem; margin:0 0 1.2rem}
+.tabs button[aria-selected="true"]{background:var(--mark); color:var(--on-mark); border-color:var(--ink); box-shadow:4px 4px 0 var(--teal)}
+.steps{list-style:none; padding:0; margin:0; counter-reset:step; display:grid; gap:1rem}
+.steps > li{counter-increment:step; background:var(--panel); border:1.5px solid var(--ink); border-radius:0; padding:1rem 1.2rem}
+.steps h3::before{content:counter(step) ". "; color:var(--accent)}
+.ready-grid{display:grid; gap:1.5rem}
+.checks details summary{min-height:36px; font-size:17px}
+.votes{display:grid; gap:1.1rem}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.build-side{display:grid; gap:1rem; align-content:start}
+.build-steps{list-style:none; padding:0; margin:0; display:grid; gap:.6rem}
+.build-steps li{display:flex; align-items:center; gap:.9rem; flex-wrap:wrap}
+.build-steps button{min-width:18rem; text-align:left}
+.build-steps span{font-family:var(--display); font-weight:500; color:var(--muted); font-size:17px}
+#spec-reset{justify-self:start}
+.onefile{background:var(--panel); border:2px solid var(--ink); border-radius:0; box-shadow:8px 8px 0 var(--lav); padding:1rem 1.3rem; margin:0 0 1.5rem}
+.onefile p{margin:.2rem 0 0; max-width:none}
+.onefile .say{font-family:var(--mono); font-size:17px; background:var(--mark); color:var(--on-mark); padding:.1em .4em; border-radius:0}
+footer{border-top:2px solid var(--line); margin-top:3rem}
+footer .inner{max-width:1040px; margin:0 auto; padding:2rem 1.25rem 3rem}
+footer .next{font-family:var(--display); font-weight:600; font-size:clamp(1.4rem,3.5vw,2rem); line-height:1.25; max-width:24em; margin:0}
+
+/* Present button */
+.present-li{margin-left:auto}
+.present-btn{font-size:16px; padding:.2rem .9rem; min-height:36px}
+.deck-controls{display:none}
+
+/* ---------- Present mode: one section per screen ----------
+   Each slide is laid out at a fixed 1280px design width, then scaled
+   to fit the screen, so nothing ever needs scrolling. */
+body.present{overflow:hidden}
+body.present nav{display:none}
+body.present main{max-width:none; padding:0}
+body.present .slide{display:none; position:fixed; inset:0; z-index:10; overflow:hidden; background-color:var(--paper); padding:0; margin:0; border:0}
+body.present .slide.active{display:flex; align-items:center; justify-content:center}
+body.present .hero.slide .fit{display:grid; grid-template-columns:minmax(0,1fr) 38%; gap:2rem; align-items:stretch}
+body.present .hero.slide .hero-inner{margin:0; padding:2rem 0}
+body.present .hero.slide .hero-art{min-height:560px}
+body.present .fit{width:1280px; flex:none; transform-origin:center center}
+
+body.present .hero h1{font-size:132px}
+body.present .hero .sub{font-size:40px}
+body.present .hero .lede{font-size:26px}
+body.present h2{font-size:50px; margin-bottom:.4rem}
+body.present .intro{margin-bottom:1.2rem}
+body.present .rungs{display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem}
+body.present .rung{border:1.5px solid var(--ink); border-radius:0; padding:1.1rem 1.2rem; background:var(--panel)}
+body.present .rung:last-child{border-bottom:2px solid var(--line)}
+body.present .compare{grid-template-columns:1fr; gap:.75rem}
+body.present .rung pre{font-size:15px}
+body.present .moves{display:grid; grid-template-columns:1fr 1fr; gap:0 2.5rem}
+body.present .moves > li{padding:1rem 0}
+body.present .moves p{margin:.2rem 0 0}
+body.present .moves > li.not-needed{grid-column:1 / -1; margin:1rem 0 0; padding:1rem 1.2rem}
+body.present .not-needed p{margin:0}
+body.present .board{grid-template-columns:1fr 1fr; gap:1.2rem 3rem; align-items:start}
+body.present .board{grid-template-columns:1.15fr 1fr; align-items:center}
+body.present .spec-card p{font-size:34px}
+body.present .plan-grid{display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start}
+body.present .builder{grid-template-columns:1fr 1fr; gap:.8rem 1rem}
+body.present .output h3:first-child{margin-top:0}
+body.present .output pre{font-size:15px}
+body.present .builder input[type=text], body.present .builder select{max-width:none}
+body.present .output .prompt{position:relative}
+body.present .output .prompt-bar{position:absolute; right:0; top:-3rem; margin:0}
+body.present .output .hint{margin-bottom:.4rem}
+body.present footer .inner{padding:0 2rem; max-width:none}
+body.present footer .next{font-size:60px; max-width:none}
+.fs-toast{position:fixed; left:50%; top:16px; transform:translateX(-50%); z-index:30; background:var(--ink); color:var(--paper); font-family:var(--display); font-weight:500; font-size:17px; padding:.6rem 1rem; border-radius:0; max-width:90vw}
+.fs-toast[hidden]{display:none}
+body.present .deck-controls{
+  display:flex; align-items:center; gap:.5rem; position:fixed; right:14px; bottom:14px; z-index:20;
+  opacity:.3; transition:opacity .2s; font-family:var(--display); font-weight:500; font-size:16px; color:var(--muted);
+}
+body.present .deck-controls:hover, body.present .deck-controls:focus-within{opacity:1}
+body.present .deck-controls button{font-size:15px; min-height:36px; padding:.2rem .7rem}
+
+body.present .steps{grid-template-columns:1fr 1fr}
+body.present .steps pre{font-size:15px}
+body.present .ready-grid{grid-template-columns:1.35fr 1fr; gap:2.5rem; align-items:start}
+@media print{
+  nav, button, details summary{display:none}
+  details{display:block}
+  .hero{background-image:none}
+  body{font-size:14pt}
+}
+</style>
+</head>
+<body>
+
+<nav aria-label="Sections">
+  <ul>
+    <li><a href="#show">Show and tell</a></li>
+    <li><a href="#moves">Four moves</a></li>
+    <li><a href="#build">Live build</a></li>
+    <li><a href="#file">Own the file</a></li>
+    <li><a href="#plan">Upgrade or plan</a></li>
+    <li><a href="#ready">Ready check</a></li>
+    <li class="present-li"><button type="button" id="present-btn" class="present-btn">Present</button></li>
+  </ul>
+</nav>
+
+<header class="hero slide">
+  <div class="hero-inner">
+    <h1>Vibe Coding 2.0</h1>
+    <p class="sub">Level up your classroom builds</p>
+    <span class="file-chip" aria-label="your-game.html">
+      <svg width="22" height="26" viewBox="0 0 22 26" aria-hidden="true"><path d="M2 1h12l6 6v18H2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 1v6h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      your-game.html
+    </span>
+    <p class="lede">Version 2.0 means you own the file: one HTML file that any AI can edit, that opens on any computer, and that you can host anywhere you like.</p>
+    <p class="meta">No laptop? Pair up. Everything here works on a neighbor's screen.</p>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 600 640" preserveAspectRatio="xMidYMid slice">
+      <rect class="p-blush" x="150" y="0" width="450" height="640"/>
+      <polygon class="p-teal" points="440,0 600,0 600,640 540,640"/>
+      <rect class="p-lav" x="60" y="400" width="240" height="240"/>
+      <rect class="p-line" x="110" y="70" width="330" height="440"/>
+      <rect class="p-ink" x="330" y="140" width="20" height="500"/>
+    </svg>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ SHOW AND TELL ============ -->
+<section id="show" class="slide">
+  <h2>Show and tell</h2>
+  <p class="intro">Three tools built with AI for three different jobs. Each one shows the prompt most people start with next to a version that gets you something that works.</p>
+  <div class="rungs">
+
+  <div class="rung">
+    <div class="rung-head">
+      <div><span class="level">For running a session</span><h3>Strategy Studio</h3></div>
+      <a class="demo-link" href="https://jwhal-design.github.io/strategystudio/" target="_blank" rel="noopener">Open the demo</a>
+    </div>
+    <p>Sorts a room into groups. People scan a QR code, land in a group with a strategy they've never used, and design a lesson before the timer runs out.</p>
+    <div class="compare">
+      <div class="v1"><h4>1.0 prompt</h4><pre>Make an app that puts my class into groups.</pre></div>
+      <div><h4>2.0 prompt</h4><pre>Build a single-file HTML facilitator page for a PD session. I set the number of groups (4 to 10) with plus and minus buttons, and a QR code on screen updates to match. Each person who scans gets a group and an instructional strategy card to teach. Add a large design timer, 15 minutes by default, with Start and Reset. Readable from the back of the room. No accounts, and don't save or send anything.</pre></div>
+    </div>
+  </div>
+
+  <div class="rung">
+    <div class="rung-head">
+      <div><span class="level">For tracking small groups, offline</span><h3>Quick Check</h3></div>
+      <button type="button" class="demo-link" id="download-qc">Download to run offline</button>
+    </div>
+    <p>A teacher-only tool for tracking Tier 2 groups. Student codes, never names. It runs offline on your own computer, saves on that device, and backs up to a file you keep. There's no online version on purpose.</p>
+    <div class="compare">
+      <div class="v1"><h4>1.0 prompt</h4><pre>Make an app to track my intervention groups.</pre></div>
+      <div><h4>2.0 prompt</h4><pre>Build a single-file HTML tool I'll run offline on my own computer to track small-group progress for Tier 2. Students are entered as codes, never names, and it warns me if a code looks like a name. For each group I pick a skill, a scoring scale, and a goal. At each check I score every student fast and see who's on track, who to watch, and who needs a change. Save on this device only, add Download a copy and Load a copy buttons that use a JSON file, and include a print view. No internet, no external libraries.</pre></div>
+    </div>
+  </div>
+
+  <div class="rung">
+    <div class="rung-head">
+      <div><span class="level">For students</span><h3>Ghost Town Detective</h3></div>
+      <a class="demo-link" href="https://apphive.us/ghosttown" target="_blank" rel="noopener">Open the demo</a>
+    </div>
+    <p>A primary-source investigation set in a fictional Oklahoma oil boomtown. Nobody builds this with one prompt. It started with a brainstorm, got a look, and then took many rounds of small changes, tested every time.</p>
+    <div class="compare">
+      <div class="v1"><h4>1.0 prompt</h4><pre>Make a spooky mystery game about an Oklahoma oil boomtown.</pre></div>
+      <div><h4>2.0 first prompt</h4><pre>I teach 8th grade Oklahoma history. Students need to back up a claim with evidence from primary sources. The moment I want: students arguing over evidence like detectives. Brainstorm 3 very different Halloween game ideas set in a fictional 1920s Oklahoma oil boomtown, 2 sentences each. Make one of them weird. Don't write any code yet.</pre></div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ============ FOUR MOVES ============ -->
+<section id="moves" class="slide">
+  <h2>Four moves</h2>
+  <p class="intro">What separates people who ship working tools from people who keep restarting chats. Each move has a prompt you can copy and adapt.</p>
+
+  <ol class="moves">
+    <li>
+      <div>
+        <h3>Start with the goal, then brainstorm</h3>
+        <p>Tell the AI what students need to learn and the moment you want in the room. Then have it brainstorm three different ideas before it builds anything. Its first idea is usually the most boring one. Your goal, your moment, and your look are the spec. Six specific lines beat a document nobody reads.</p>
+        <details><summary>Show the prompt</summary>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>I teach [subject] in grades [grade band]. Students need to [learning goal].
+The moment I want: students [arguing over an answer, racing the clock, begging for one more round].
+Brainstorm 3 very different game ideas, 2 sentences each. Make one of them weird. Don't write any code yet.</pre></div>
+        </details>
+      </div>
+    </li>
+    <li>
+      <div>
+        <h3>Bring your taste</h3>
+        <p>Without direction, every AI app gets the same look: gradients, emoji icons, rows of rounded cards. Give it a reference that fits your content, like an era, a real object, or a screenshot you like. Say what you don't want, too.</p>
+        <details><summary>Show the prompts</summary>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Make it look like [a real thing: a 1930s field notebook, a game show set, a museum exhibit].
+Pull the colors and type from that reference.
+No gradients, no emoji icons, no rows of identical rounded cards.
+Rebuild the app in that style without changing how it works. Give me the whole file.</pre></div>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Here's a screenshot of a design I like. [attach it]
+Describe its colors, type, layout, and mood. Then restyle my app to match without changing how it works.</pre></div>
+        </details>
+      </div>
+    </li>
+    <li>
+      <div>
+        <h3>Small changes, test every time</h3>
+        <p>Bundle small fixes in one prompt. Give big changes, like a restyle or a new feature, their own prompt. Test after every prompt and save a copy that works. When something breaks, drop to one change at a time, and if a fix breaks two other things, start a fresh chat with your last good copy.</p>
+        <details><summary>Show the prompts</summary>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Here is my working file. Make these small changes:
+1. [small change]
+2. [small change]
+3. [small change]
+Don't change anything else. Give me the whole file and list what you changed.</pre></div>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Something broke, so I'm starting over from the last working version of my classroom app. [paste the file]
+In this chat I only want one change: [describe it]. Read the whole file before changing anything.</pre></div>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Here is my working file. Replace only the CONTENT block with [number] items about [topic] for grades [grade band]. Don't change anything outside the CONTENT block.</pre></div>
+        </details>
+      </div>
+    </li>
+    <li>
+      <div>
+        <h3>Break it, then report it like a witness</h3>
+        <p>Test like a 7th grader: mash buttons, click out of order, try a phone and the projector. When something breaks, say what you expected, what happened, and the steps to make it happen. Paste the red text from the console (F12, or Ctrl+Shift+J on a Chromebook).</p>
+        <details><summary>Show the prompts</summary>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Act as a 7th grader trying to break this app or game the score. List the 5 most likely ways a student could cause a bug or cheat in a real class. Then fix the top one, give me the whole file, and tell me in one sentence what you changed.</pre></div>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Bug report for my classroom app.
+What I expected: [expected]
+What actually happened: [what happened]
+Steps to make it happen: 1. [step] 2. [step] 3. [step]
+Console error: [paste red text, or "none"]
+Find the cause before changing anything. Explain it in one sentence, then give me the smallest fix that solves it.</pre></div>
+        </details>
+      </div>
+    </li>
+    <li class="not-needed">
+      <div>
+        <h3>What you don't need</h3>
+        <p>React, APIs, "agentic workflows," or magic phrases. Opening with "you are a world-class senior developer" is mostly superstition. A clear goal and a real reference beat a flattering role every time.</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- ============ LIVE BUILD ============ -->
+<section id="build" class="slide">
+  <h2>Live build: you pick it</h2>
+  <p class="intro">The room votes, I build. Every step is one of the four moves, including the part where something breaks.</p>
+
+  <div class="board">
+    <div class="votes">
+      <fieldset data-group="mechanic">
+        <legend>Mechanic</legend>
+        <div class="choices">
+          <button type="button" aria-pressed="false" data-value="sequencing game">Sequence it</button>
+          <button type="button" aria-pressed="false" data-value="choose-your-path game">Choose your path</button>
+          <button type="button" aria-pressed="false" data-value="arcade catch game">Arcade catch</button>
+        </div>
+        <p class="mech-note" id="mech-note">Pick one to see what students do.</p>
+      </fieldset>
+
+      <fieldset data-group="grade">
+        <legend>Grade band</legend>
+        <div class="choices">
+          <button type="button" aria-pressed="false" data-value="K-2">K-2</button>
+          <button type="button" aria-pressed="false" data-value="3-5">3-5</button>
+          <button type="button" aria-pressed="false" data-value="6-8">6-8</button>
+          <button type="button" aria-pressed="false" data-value="9-12">9-12</button>
+        </div>
+      </fieldset>
+
+      <div class="two">
+        <div>
+          <label for="vote-subject">Topic</label>
+          <input type="text" id="vote-subject" placeholder="the Dust Bowl" autocomplete="off">
+        </div>
+        <div>
+          <label for="vote-goal">Students need to...</label>
+          <input type="text" id="vote-goal" placeholder="explain what caused it" autocomplete="off">
+        </div>
+      </div>
+
+      <fieldset data-group="look">
+        <legend>Look</legend>
+        <div class="choices">
+          <button type="button" aria-pressed="false" data-value="a retro arcade cabinet: black screen, neon pixel type, chunky buttons">Retro arcade</button>
+          <button type="button" aria-pressed="false" data-value="an old field notebook: tan paper, pencil sketches, stamped labels">Field notebook</button>
+          <button type="button" aria-pressed="false" data-value="a newspaper front page: bold headlines, columns, ink-black type">Newspaper</button>
+          <button type="button" aria-pressed="false" data-value="a museum exhibit: big labels, framed artifacts, quiet colors">Museum exhibit</button>
+        </div>
+      </fieldset>
+
+      <fieldset data-group="twist">
+        <legend>Twist (added second, as one change)</legend>
+        <div class="choices">
+          <button type="button" aria-pressed="false" data-value="a countdown timer">A timer</button>
+          <button type="button" aria-pressed="false" data-value="hints that cost points">Hints that cost points</button>
+          <button type="button" aria-pressed="false" data-value="a mystery item at the end">A mystery item</button>
+          <button type="button" aria-pressed="false" data-value="sound effects for right and wrong answers">Sound effects</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="build-side">
+      <div class="spec-card" aria-live="polite"><p id="spec-line"></p></div>
+      <ol class="build-steps">
+        <li><button type="button" data-step="1">Copy step 1: build it</button><span>Goal, taste, one file</span></li>
+        <li><button type="button" data-step="2">Copy step 2: add the twist</button><span>Small changes, test every time</span></li>
+        <li><button type="button" data-step="3">Copy step 3: break it</button><span>Break it and fix it</span></li>
+      </ol>
+      <button type="button" id="spec-reset">Start over</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OWN THE FILE ============ -->
+<section id="file" class="slide">
+  <h2>Own the file</h2>
+  <p class="intro">Your app should be one HTML file you can open, edit, host, and hand to a colleague. Try it now with the sample below.</p>
+
+  <div class="onefile">
+    <h3>Why one file?</h3>
+    <p>The page, the style, and the code all live inside it. Paste the whole app into any AI chat, double-click to open it, email it, or upload it anywhere. No missing images, no broken links, and it works offline. Put this line in every build prompt: <span class="say">a single-file HTML app, no external libraries, no images from the web</span></p>
+  </div>
+
+  <div class="row" style="margin:0 0 1.75rem">
+    <button type="button" id="download-sample">Download a sample app</button>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h3>Run it on your computer</h3>
+      <ul>
+        <li><span class="k">Windows:</span> double-click the file. If it opens in Notepad, right-click it, choose Open with, and pick Chrome or Edge.</li>
+        <li><span class="k">Mac:</span> double-click to open in Safari, or right-click, choose Open With, and pick Chrome.</li>
+        <li><span class="k">Chromebook:</span> open the Files app, go to Downloads, and double-click the file. It opens in Chrome.</li>
+        <li><span class="k">iPad and phones:</span> local HTML files are unreliable here. Use a hosted link instead.</li>
+      </ul>
+      <p class="warn">To edit it yourself, open it in a plain text editor: Notepad, the Text app on a Chromebook, or TextEdit on a Mac (turn on "display HTML files as HTML code" in TextEdit's settings). Or paste the whole file into your AI chat.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Host it on GitHub Pages</h3>
+      <ol>
+        <li>Make a free account at github.com.</li>
+        <li>Click New repository. Give it a short name like <code>classroom-apps</code> and set it to Public.</li>
+        <li>Click Add file, then Upload files. Drag in your HTML file and click Commit changes.</li>
+        <li>Go to Settings, then Pages. Set the source to Deploy from a branch, choose <code>main</code> and <code>/ (root)</code>, and save.</li>
+        <li>Wait a minute or two. Your app lives at <code>yourname.github.io/classroom-apps/your-file.html</code></li>
+      </ol>
+      <p class="warn">Public means public. Nothing with student names goes in a repository. A file named <code>index.html</code> becomes the front page, which is how this page works.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Publish it on Teacher Hive</h3>
+      <p>Teacher Hive hosts classroom apps so other teachers can find and use them. Good fit when you want an audience, not just a link.</p>
+      <p><a href="https://teacherhive.app/" target="_blank" rel="noopener">Go to Teacher Hive</a></p>
+      <p class="warn">Read the publishing guidelines before you submit. Their rules apply to anything you post there.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ UPGRADE OR PLAN ============ -->
+<section id="plan" class="slide">
+  <h2>Upgrade yours or plan one</h2>
+  <p class="intro">Brought a tool? Upgrade it. Starting fresh? Plan one. Either way, work with a partner and save a copy after every step that works.</p>
+
+  <div class="tabs" role="tablist" aria-label="Choose a track">
+    <button type="button" role="tab" id="tab-up" aria-selected="true" aria-controls="panel-up">I brought a tool</button>
+    <button type="button" role="tab" id="tab-plan" aria-selected="false" aria-controls="panel-plan">I'm starting fresh</button>
+  </div>
+
+  <div id="panel-up" role="tabpanel" aria-labelledby="tab-up">
+    <ol class="steps">
+      <li><h3>Give it a look</h3>
+        <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Here is my classroom app. [paste the whole file]
+Restyle it to look like [a real thing that fits the topic]. Pull the colors and type from that reference. No gradients, emoji icons, or rows of identical rounded cards. Don't change how it works. Give me the whole file.</pre></div></li>
+      <li><h3>Break it and fix it</h3>
+        <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Act as a student trying to break this app or game the score. List the 5 most likely ways a student could cause a bug or cheat in a real class. Then fix the top one, give me the whole file, and tell me in one sentence what you changed.</pre></div></li>
+      <li><h3>Fix the next one</h3>
+        <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Fix #[number] from that list. Don't change anything else. Give me the whole file and tell me in one sentence what you changed.</pre></div></li>
+      <li><h3>Let students carry their results</h3>
+        <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Add a results screen at the end: a read-only text box with a plain-text summary of the student's work and a Copy results button, so students can paste it into our LMS. Don't save or send anything. Give me the whole file.</pre></div></li>
+    </ol>
+    <p class="hint">Test it after every step and save a copy that works. Got time left? Run the ready check prompts.</p>
+  </div>
+
+  <div id="panel-plan" role="tabpanel" aria-labelledby="tab-plan" hidden>
+  <div class="plan-grid">
+  <form class="builder" id="builder" onsubmit="return false">
+    <p class="hint full" style="margin:0">These six answers are your spec. Short beats detailed if it's specific.</p>
+    <div>
+      <label for="b-grade">Grade band</label>
+      <select id="b-grade">
+        <option value="K-2">K-2</option><option value="3-5">3-5</option>
+        <option value="6-8">6-8</option><option value="9-12" selected>9-12</option>
+      </select>
+    </div>
+    <div>
+      <label for="b-setting">Where it gets used</label>
+      <select id="b-setting">
+        <option value="a classroom projector, whole class">Projector, whole class</option>
+        <option value="student laptops or Chromebooks">Student laptops or Chromebooks</option>
+        <option value="student phones">Student phones</option>
+        <option value="a station with small groups">A station, small groups</option>
+      </select>
+    </div>
+    <div class="full">
+      <label for="b-subject">Subject and topic</label>
+      <input type="text" id="b-subject" placeholder="Biology: cell transport">
+    </div>
+    <div class="full">
+      <label for="b-goal">Students need to...</label>
+      <input type="text" id="b-goal" placeholder="predict which way water moves across a membrane and explain why">
+    </div>
+    <div class="full">
+      <label for="b-moment">The moment I want: students...</label>
+      <input type="text" id="b-moment" placeholder="arguing over whether the cell will swell or shrink">
+      <p class="hint">Pick the reaction you want in the room. That's what turns a worksheet into a game.</p>
+    </div>
+    <div class="full">
+      <label for="b-look">It should look like...</label>
+      <input type="text" id="b-look" placeholder="a lab notebook: graph paper, stamped labels, hand-drawn diagrams">
+      <p class="hint">Name a real thing, not an adjective. "Fun and colorful" gets you the same app as everyone else.</p>
+    </div>
+  </form>
+
+  <div class="output">
+    <h3>Step 1: brainstorm</h3>
+    <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div><pre id="out-spec"></pre></div>
+    <h3>Step 2: build the one you pick</h3>
+    <p class="hint">Paste this into the same chat once you've picked an idea.</p>
+    <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div><pre id="out-build"></pre></div>
+    <p class="privacy">Nothing you type here is saved or sent anywhere. Close the tab and it's gone, so copy your prompts first.</p>
+  </div>
+  </div>
+  </div>
+</section>
+
+<!-- ============ READY CHECK ============ -->
+<section id="ready" class="slide">
+  <h2>Ready check</h2>
+  <p class="intro">Five checks before a tool goes in front of students. Use it on every build.</p>
+  <div class="ready-grid">
+    <div>
+      <ul class="checks">
+        <li><span class="q">It works.</span> It survived the break-it test, and you fixed the problems a real class would hit.</li>
+        <li><span class="q">Everyone can use it.</span> Readable from the back row, strong contrast, works with only a keyboard, and nothing depends on color alone.
+          <details><summary>Accessibility prompt</summary>
+            <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Check this app for accessibility before students use it: text size and contrast, whether everything works with only a keyboard (Tab, Enter, arrow keys), whether anything depends on color alone, whether buttons and images have labels a screen reader can read, and whether animations can be turned off. Fix the 3 problems that would affect the most students. Give me the whole file and list what you fixed.</pre></div>
+          </details></li>
+        <li><span class="q">It's private.</span> No names, logins, or email. It doesn't save or send anything. Your own offline tool can save on your computer if it uses codes and backs up to a file.
+          <details><summary>Privacy prompt</summary>
+            <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Before I share this with students, check it. List every place this file stores, sends, or loads anything: browser storage, network requests, external scripts, fonts, images, or forms. Remove anything that sends student data or loads from the internet, and give me the whole file. If there's nothing to remove, say so.</pre></div>
+          </details></li>
+        <li><span class="q">Someone else tried it.</span> A colleague or a small group used it before the whole class did, and you fixed one thing from their feedback.</li>
+        <li><span class="q">You know who it's for.</span> Keep it teacher-facing if it holds student info, still breaks sometimes, or needs you standing there to explain it. It's student-ready when it passes every check above and a student can use it cold.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="carry" style="margin-top:0">
+        <h3>Need student results? Let the student carry them.</h3>
+        <p>End the app with a results box and a Copy results button. Students paste their results into the LMS assignment, so the work lands somewhere your district already approved and the app never keeps anything.</p>
+        <details><summary>Show the prompt</summary>
+          <div class="prompt"><div class="prompt-bar"><button type="button" data-copy>Copy prompt</button></div>
+<pre>Add a results screen at the end of my app: a read-only text box with a plain-text summary of the student's work (their choices, answers, and score) and a Copy results button. Above the box, add this line: "Copy this and paste it wherever your teacher asks. Nothing is sent anywhere." Don't save or send anything.</pre></div>
+        </details>
+      </div>
+      <p style="margin-top:1.5rem"><span style="font-family:var(--display);font-weight:800">For admins:</span> when a teacher wants to publish an app, ask three things. Does it collect data? Where is it hosted? Who maintains it?</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="slide">
+  <div class="inner">
+    <p class="next">Now go build something awesome.</p>
+  </div>
+</footer>
+
+<div class="fs-toast" id="fs-toast" role="status" hidden>This window blocked full screen. Press F11 (Windows and Chromebook) or Ctrl+Cmd+F (Mac).</div>
+<div class="deck-controls" role="group" aria-label="Presentation controls">
+  <button type="button" id="deck-prev">Back</button>
+  <span id="deck-count" aria-live="polite"></span>
+  <button type="button" id="deck-next">Next</button>
+  <button type="button" id="deck-exit">Exit</button>
+</div>
+
+<script>
+(function(){
+  /* ---------- Copy buttons ---------- */
+  function copyText(text, btn){
+    var done = function(){
+      if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+      clearTimeout(btn._copyTimer);
+      btn.textContent = "Copied"; btn.classList.add("copied");
+      btn._copyTimer = setTimeout(function(){ btn.textContent = btn.dataset.label; btn.classList.remove("copied"); }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(done, function(){ fallback(text); done(); });
+    } else { fallback(text); done(); }
+  }
+  function fallback(text){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+  }
+  document.addEventListener("click", function(e){
+    var btn = e.target.closest("[data-copy]");
+    if (!btn) return;
+    var pre = btn.closest(".prompt").querySelector("pre");
+    copyText(pre.textContent.trim(), btn);
+  });
+
+  /* ---------- Live build vote board ---------- */
+  var notes = {
+    "sequencing game": "Students put events, steps, or stages in order and get feedback on each wrong placement.",
+    "choose-your-path game": "Students make decisions, see the consequences, and trace cause and effect.",
+    "arcade catch game": "A prompt sits at the top while answers fall. Students catch the right ones and dodge the wrong ones, and every wrong catch shows why. Speed goes up each level, with lives and a high score."
+  };
+  var picks = { mechanic:"", grade:"", look:"", twist:"" }, lookLabel = "";
+  var subject = document.getElementById("vote-subject"), goalIn = document.getElementById("vote-goal");
+  var line = document.getElementById("spec-line");
+
+  function blank(val, placeholder){
+    var s = document.createElement("span"); s.className = "blank";
+    s.textContent = val || placeholder; return s;
+  }
+  function an(w){ return /^[aeiou]/i.test(w) ? "an " : "a "; }
+  function renderSpec(){
+    line.textContent = "";
+    line.append("We're building " + (picks.mechanic ? an(picks.mechanic) : "a "), blank(picks.mechanic, "mechanic"),
+      " for grades ", blank(picks.grade, "grade band"),
+      " about ", blank(subject.value.trim(), "topic"),
+      ". Students need to ", blank(goalIn.value.trim().replace(/[.\s]+$/,""), "learning goal"),
+      ". It looks like ", blank(lookLabel ? an(lookLabel) + lookLabel.toLowerCase() : "", "a real thing"),
+      ", and then we add ", blank(picks.twist, "a twist"), ".");
+  }
+  document.querySelectorAll("fieldset[data-group]").forEach(function(fs){
+    var group = fs.getAttribute("data-group");
+    fs.querySelectorAll("button").forEach(function(b){
+      b.addEventListener("click", function(){
+        fs.querySelectorAll("button").forEach(function(o){ o.setAttribute("aria-pressed","false"); });
+        b.setAttribute("aria-pressed","true");
+        picks[group] = b.getAttribute("data-value");
+        if (group === "look") lookLabel = b.textContent;
+        if (group === "mechanic") document.getElementById("mech-note").textContent = notes[picks.mechanic];
+        renderSpec();
+      });
+    });
+  });
+  subject.addEventListener("input", renderSpec);
+  goalIn.addEventListener("input", renderSpec);
+  document.getElementById("spec-reset").addEventListener("click", function(){
+    picks = { mechanic:"", grade:"", look:"", twist:"" }; lookLabel = ""; subject.value = ""; goalIn.value = "";
+    document.querySelectorAll(".choices button").forEach(function(o){ o.setAttribute("aria-pressed","false"); });
+    document.getElementById("mech-note").textContent = "Pick one to see what students do.";
+    renderSpec();
+  });
+  function stepPrompt(n){
+    var mech = picks.mechanic || "[mechanic]", grade = picks.grade || "[grade band]",
+        topic = subject.value.trim() || "[topic]",
+        goal = goalIn.value.trim().replace(/[.\s]+$/,"") || "[learning goal]",
+        look = picks.look || "[a real thing that fits the topic]", twist = picks.twist || "[twist]";
+    if (n === 1) return "Build " + an(mech) + mech + " for grades " + grade + " about " + topic + " as a single-file HTML app (HTML, CSS, and JavaScript all in one file). No external libraries or images from the web.\n" +
+      (notes[picks.mechanic] ? notes[picks.mechanic] + "\n" : "") +
+      "Students need to " + goal + ". When they're wrong, the feedback explains why.\n" +
+      "Look: like " + look + ". Pull the colors and type from that. No gradients, emoji icons, or rows of identical rounded cards.\n" +
+      "Big text and big buttons for a classroom projector. Put all the content in one block at the top. No logins, and don't save or send anything.\n" +
+      "Start with just the main game loop. Give me the whole file.";
+    if (n === 2) return "Add " + twist + ". Don't change anything else. Give me the whole file and tell me in one sentence what you changed.";
+    return "Act as " + (picks.grade ? "a student in grades " + picks.grade : "a 7th grader") + " trying to break this app or game the score. List the 5 most likely ways a student could cause a bug or cheat in a real class. Then fix the top one, give me the whole file, and tell me in one sentence what you changed.";
+  }
+  document.querySelectorAll(".build-steps button").forEach(function(b){
+    b.addEventListener("click", function(){ copyText(stepPrompt(+b.getAttribute("data-step")), b); });
+  });
+  renderSpec();
+
+  /* ---------- Track tabs ---------- */
+  var tabs = document.querySelectorAll('[role="tab"]');
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){
+      tabs.forEach(function(o){
+        var on = o === t;
+        o.setAttribute("aria-selected", on ? "true" : "false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden = !on;
+      });
+    });
+  });
+
+  /* ---------- Prompt builder ---------- */
+  function v(id, ph){ var x = document.getElementById(id).value.trim().replace(/[.\s]+$/,""); return x || ph; }
+  function buildPrompts(){
+    var grade = v("b-grade","[grade band]"), setting = v("b-setting","[setting]"),
+        subj = v("b-subject","[subject and topic]"), goal = v("b-goal","[learning goal]"),
+        moment = v("b-moment","[the reaction you want]"), look = v("b-look","[a real thing that fits the topic]");
+
+    document.getElementById("out-spec").textContent =
+"I teach " + subj + " in grades " + grade + ". Students need to " + goal + ".\n" +
+"The moment I want: students " + moment + ".\n" +
+"It will be used on " + setting + ", and it should look like " + look + ".\n" +
+"Brainstorm 3 very different game ideas, 2 sentences each. Make one of them weird. Don't write any code yet.";
+
+    document.getElementById("out-build").textContent =
+"Build idea #[1, 2, or 3] as a single-file HTML app (HTML, CSS, and JavaScript all in one file). No external libraries or images from the web.\n" +
+"- Look: like " + look + ". Pull the colors and type from that. No gradients, emoji icons, or rows of rounded cards.\n" +
+"- Big text and big buttons for " + setting + ".\n" +
+"- When students are wrong, the feedback explains why.\n" +
+"- Put all the questions and content in one block at the top so I can swap it later.\n" +
+"- No logins. Don't save or send student data.\n" +
+"Start with just the main game loop. We'll add to it in small steps.";
+  }
+  document.getElementById("builder").addEventListener("input", buildPrompts);
+  document.getElementById("builder").addEventListener("change", buildPrompts);
+  buildPrompts();
+
+  /* ---------- Sample app download ---------- */
+  var sample = [
+'<!doctype html>',
+'<html lang="en"><head><meta charset="utf-8">',
+'<meta name="viewport" content="width=device-width, initial-scale=1">',
+'<title>Water Cycle in Order</title>',
+'<style>',
+'body{font-family:system-ui,sans-serif;font-size:22px;max-width:640px;margin:2rem auto;padding:0 1rem;line-height:1.5}',
+'button{display:block;width:100%;font-size:22px;padding:14px;margin:10px 0;border:2px solid #333;border-radius:10px;background:#fff;color:#111;cursor:pointer}',
+'button.done{background:#cfeccf;border-color:#2f7d4f}',
+'#msg{min-height:1.6em;font-weight:bold}',
+'</style></head><body>',
+'<h1>Put the water cycle in order</h1>',
+'<p>Click the stages from first to last.</p>',
+'<div id="board"></div><p id="msg"></p>',
+'<script>',
+'/* CONTENT: what a teacher edits. List items in the correct order. */',
+'const CONTENT = ["Evaporation", "Condensation", "Precipitation", "Collection"];',
+'',
+'/* BEHAVIOR: how it works. */',
+'let next = 0;',
+'const board = document.getElementById("board"), msg = document.getElementById("msg");',
+'CONTENT.map((t, i) => ({ t, i })).sort(() => Math.random() - 0.5).forEach(item => {',
+'  const b = document.createElement("button");',
+'  b.textContent = item.t;',
+'  b.onclick = () => {',
+'    if (b.classList.contains("done")) return;',
+'    if (item.i === next) {',
+'      b.classList.add("done"); next++;',
+'      b.textContent = next + ". " + item.t;',
+'      msg.textContent = next === CONTENT.length ? "You got it. Every stage in order." : "Yes. What comes next?";',
+'    } else {',
+'      msg.textContent = "Not yet. " + item.t + " happens later in the cycle.";',
+'    }',
+'  };',
+'  board.appendChild(b);',
+'});',
+'<\/script></body></html>'
+  ].join("\n");
+  document.getElementById("download-sample").addEventListener("click", function(){
+    var blob = new Blob([sample], { type:"text/html" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "water-cycle.html";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  });
+
+  /* ---------- Quick check: download only, never served as a live page ---------- */
+  var QUICK_CHECK_B64 = "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xIj4KPHRpdGxlPlF1aWNrIENoZWNrOiBTbWFsbCBHcm91cCBQcm9ncmVzczwvdGl0bGU+CjxzdHlsZT4KOnJvb3R7CiAgLS1iZzojRjRGNkY4OyAtLWNhcmQ6I2ZmZjsgLS1pbms6IzE4MjEyQjsgLS1tdXRlZDojNUE2NjcyOyAtLWxpbmU6I0Q2RERFMzsKICAtLWdvOiMxQzdDNTQ7IC0td2F0Y2g6I0E5NjUwMDsgLS1zdG9wOiNCMzI2MUU7IC0tZ3JheTojNkI3MjgwOyAtLWJsdWU6IzI0NUNBODsKfQoqe2JveC1zaXppbmc6Ym9yZGVyLWJveH0KYm9keXttYXJnaW46MDtiYWNrZ3JvdW5kOnZhcigtLWJnKTtjb2xvcjp2YXIoLS1pbmspO2ZvbnQ6MTlweC8xLjQ1IHN5c3RlbS11aSwtYXBwbGUtc3lzdGVtLCJTZWdvZSBVSSIsUm9ib3RvLEFyaWFsLHNhbnMtc2VyaWZ9Ci53cmFwe21heC13aWR0aDo3NjBweDttYXJnaW46MCBhdXRvO3BhZGRpbmc6MjBweCAxNnB4IDYwcHh9Cmgxe2ZvbnQtc2l6ZToxLjZyZW07bWFyZ2luOjAgMCA0cHh9Cmgye2ZvbnQtc2l6ZToxLjI1cmVtO21hcmdpbjowIDAgMTJweH0KcHttYXJnaW46MCAwIDEwcHh9Ci5zdWJ7Y29sb3I6dmFyKC0tbXV0ZWQpO21hcmdpbjowIDAgMThweH0KLmNhcmR7YmFja2dyb3VuZDp2YXIoLS1jYXJkKTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MTRweDtwYWRkaW5nOjE4cHg7bWFyZ2luLWJvdHRvbToxNnB4fQpidXR0b24saW5wdXQsc2VsZWN0LHRleHRhcmVhe2ZvbnQ6aW5oZXJpdDtjb2xvcjppbmhlcml0fQpidXR0b257Y3Vyc29yOnBvaW50ZXI7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1saW5lKTtiYWNrZ3JvdW5kOiNmZmY7Ym9yZGVyLXJhZGl1czoxMHB4O3BhZGRpbmc6MTBweCAxNnB4fQpidXR0b24ubWFpbntiYWNrZ3JvdW5kOnZhcigtLWJsdWUpO2JvcmRlci1jb2xvcjp2YXIoLS1ibHVlKTtjb2xvcjojZmZmO2ZvbnQtd2VpZ2h0OjcwMDtwYWRkaW5nOjE0cHggMjJweDt3aWR0aDoxMDAlfQpidXR0b24ubGlua3tib3JkZXI6bm9uZTtiYWNrZ3JvdW5kOm5vbmU7Y29sb3I6dmFyKC0tYmx1ZSk7cGFkZGluZzo4cHggNnB4O3RleHQtZGVjb3JhdGlvbjp1bmRlcmxpbmV9Cjpmb2N1cy12aXNpYmxle291dGxpbmU6M3B4IHNvbGlkICNGMkI3MDU7b3V0bGluZS1vZmZzZXQ6MnB4fQpsYWJlbHtkaXNwbGF5OmJsb2NrO2ZvbnQtd2VpZ2h0OjYwMDttYXJnaW46MTRweCAwIDZweH0KLmhpbnR7Y29sb3I6dmFyKC0tbXV0ZWQpO2ZvbnQtc2l6ZTouOXJlbTtmb250LXdlaWdodDo0MDB9CmlucHV0LHNlbGVjdCx0ZXh0YXJlYXt3aWR0aDoxMDAlO2JvcmRlcjoxcHggc29saWQgI0I4QzNDQztib3JkZXItcmFkaXVzOjEwcHg7cGFkZGluZzoxMnB4O2JhY2tncm91bmQ6I2ZmZn0KLmNob2ljZXtkaXNwbGF5OmZsZXg7Z2FwOjEwcHh9Ci5jaG9pY2UgYnV0dG9ue2ZsZXg6MTtwYWRkaW5nOjE0cHh9Ci5jaG9pY2UgYnV0dG9uW2FyaWEtcHJlc3NlZD0idHJ1ZSJde2JhY2tncm91bmQ6dmFyKC0taW5rKTtjb2xvcjojZmZmO2JvcmRlci1jb2xvcjp2YXIoLS1pbmspfQoKLmVudHJ5IC5raWR7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTJweDtwYWRkaW5nOjEwcHggMDtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1saW5lKX0KLmVudHJ5IC5raWQ6bGFzdC1vZi10eXBle2JvcmRlci1ib3R0b206bm9uZX0KLmVudHJ5IC5jb2Rle2ZvbnQtd2VpZ2h0OjcwMDttaW4td2lkdGg6NTZweH0KLnRhcHN7ZGlzcGxheTpmbGV4O2dhcDo4cHg7ZmxleDoxfQoudGFwcyBidXR0b257ZmxleDoxO3BhZGRpbmc6MTJweCAwO2ZvbnQtd2VpZ2h0OjcwMDtmb250LXNpemU6MS4xcmVtfQoudGFwcyBidXR0b25bYXJpYS1wcmVzc2VkPSJ0cnVlIl17YmFja2dyb3VuZDp2YXIoLS1ibHVlKTtjb2xvcjojZmZmO2JvcmRlci1jb2xvcjp2YXIoLS1ibHVlKX0KLmVudHJ5IGlucHV0LnBjdHttYXgtd2lkdGg6MTQwcHh9Ci5kYXRlcm93e2Rpc3BsYXk6ZmxleDtnYXA6MTBweDthbGlnbi1pdGVtczpjZW50ZXI7bWFyZ2luLWJvdHRvbTo2cHh9Ci5kYXRlcm93IGlucHV0e21heC13aWR0aDoyMDBweH0KLm1zZ3ttaW4taGVpZ2h0OjEuM2VtO21hcmdpbi10b3A6MTBweDtmb250LXdlaWdodDo2MDB9Ci5tc2cub2t7Y29sb3I6dmFyKC0tZ28pfSAubXNnLmJhZHtjb2xvcjp2YXIoLS1zdG9wKX0KCi5iYW5uZXJ7Ym9yZGVyLXJhZGl1czoxMnB4O3BhZGRpbmc6MTRweCAxNnB4O21hcmdpbi1ib3R0b206MTZweDtmb250LXdlaWdodDo2MDA7YmFja2dyb3VuZDojRkRGMUVGO2NvbG9yOnZhcigtLXN0b3ApO2JvcmRlcjoxcHggc29saWQgI0YxQzlDNH0KLmJhbm5lci5nb29ke2JhY2tncm91bmQ6I0VDRjZGMTtjb2xvcjp2YXIoLS1nbyk7Ym9yZGVyLWNvbG9yOiNCRkUwQ0Z9Ci5iYW5uZXIgc3BhbntkaXNwbGF5OmJsb2NrO2ZvbnQtd2VpZ2h0OjQwMDtjb2xvcjp2YXIoLS1pbmspO21hcmdpbi10b3A6NHB4fQoKLnJvd3tib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1saW5lKX0KLnJvdzpsYXN0LWNoaWxke2JvcmRlci1ib3R0b206bm9uZX0KLnJvdyA+IGJ1dHRvbnt3aWR0aDoxMDAlO2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6NjBweCAxZnIgMTMwcHggNDRweDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEycHg7Ym9yZGVyOm5vbmU7YmFja2dyb3VuZDpub25lO3BhZGRpbmc6MTRweCA0cHg7dGV4dC1hbGlnbjpsZWZ0O2JvcmRlci1yYWRpdXM6MH0KLnJvdyAuY29kZXtmb250LXdlaWdodDo3MDB9Ci53b3Jke2ZvbnQtd2VpZ2h0OjcwMH0KLnctZ297Y29sb3I6dmFyKC0tZ28pfSAudy13YXRjaHtjb2xvcjp2YXIoLS13YXRjaCl9IC53LXN0b3B7Y29sb3I6dmFyKC0tc3RvcCl9IC53LWdyYXl7Y29sb3I6dmFyKC0tZ3JheSl9Ci5sYXRlc3R7Zm9udC13ZWlnaHQ6NzAwO3RleHQtYWxpZ246cmlnaHR9Ci53aHl7Zm9udC1zaXplOi45cmVtO2NvbG9yOnZhcigtLW11dGVkKTtmb250LXdlaWdodDo0MDA7ZGlzcGxheTpibG9ja30KLmlkZWFze3BhZGRpbmc6NHB4IDhweCAxNnB4IDhweH0KLm5vdGVib3h7bWFyZ2luLWJvdHRvbToxNHB4fQoubm90ZWJveCB0ZXh0YXJlYXttaW4taGVpZ2h0OjcwcHg7cmVzaXplOnZlcnRpY2FsfQoud2h5Lm5vdGV7Zm9udC1zdHlsZTppdGFsaWM7Y29sb3I6dmFyKC0taW5rKX0KLmlkZWFzIG9se21hcmdpbjo2cHggMCAwO3BhZGRpbmctbGVmdDoyMnB4fQouaWRlYXMgbGl7bWFyZ2luLWJvdHRvbTo4cHh9Ci5pZGVhcyAuZmlyc3R7YmFja2dyb3VuZDp2YXIoLS1iZyk7Ym9yZGVyLXJhZGl1czoxMHB4O3BhZGRpbmc6MTBweCAxMnB4O21hcmdpbi1ib3R0b206OHB4fQpzdmcuc3Bhcmt7d2lkdGg6MTMwcHg7aGVpZ2h0OjQwcHg7ZGlzcGxheTpibG9ja30KCi50b29sc3tkaXNwbGF5OmZsZXg7ZmxleC13cmFwOndyYXA7Z2FwOjRweDtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO21hcmdpbi10b3A6OHB4fQouaGlzdG9yeXttYXJnaW4tdG9wOjEycHh9Ci5oaXN0b3J5IGxpe21hcmdpbi1ib3R0b206NHB4fQouc3R1bGlzdCBsaXtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo4cHg7bWFyZ2luLWJvdHRvbTo2cHh9Ci5zdHVsaXN0e2xpc3Qtc3R5bGU6bm9uZTtwYWRkaW5nOjA7bWFyZ2luOjhweCAwfQouYWRkcm93e2Rpc3BsYXk6ZmxleDtnYXA6OHB4fQouYWRkcm93IGlucHV0e2ZsZXg6MX0KLnByaW50b25seXtkaXNwbGF5Om5vbmV9Ci50YWJze2Rpc3BsYXk6ZmxleDtmbGV4LXdyYXA6d3JhcDtnYXA6OHB4O21hcmdpbjowIDAgMThweH0KLnRhYntib3JkZXItcmFkaXVzOjk5OXB4O3BhZGRpbmc6OXB4IDE4cHg7Zm9udC13ZWlnaHQ6NjAwfQoudGFiW2FyaWEtY3VycmVudD0idHJ1ZSJde2JhY2tncm91bmQ6dmFyKC0taW5rKTtjb2xvcjojZmZmO2JvcmRlci1jb2xvcjp2YXIoLS1pbmspfQoudGFiLmFkZHtib3JkZXItc3R5bGU6ZGFzaGVkO2NvbG9yOnZhcigtLWJsdWUpfQoub3ZlcmxheXtwb3NpdGlvbjpmaXhlZDtpbnNldDowO2JhY2tncm91bmQ6cmdiYSgyNCwzMyw0MywuNTUpO2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjtwYWRkaW5nOjE2cHg7ei1pbmRleDoxMH0KLm1vZGFse2JhY2tncm91bmQ6I2ZmZjtib3JkZXItcmFkaXVzOjE2cHg7cGFkZGluZzoyMnB4O21heC13aWR0aDo0ODBweDt3aWR0aDoxMDAlfQoub3B0e2Rpc3BsYXk6ZmxleDtnYXA6MTJweDthbGlnbi1pdGVtczpmbGV4LXN0YXJ0O2ZvbnQtd2VpZ2h0OjYwMDtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MTJweDtwYWRkaW5nOjEycHg7bWFyZ2luOjEwcHggMDtjdXJzb3I6cG9pbnRlcn0KLm9wdCBpbnB1dHt3aWR0aDphdXRvO21hcmdpbi10b3A6NXB4fQoub3B0IC5oaW50e2Rpc3BsYXk6YmxvY2t9Ci53YXJue2NvbG9yOnZhcigtLXN0b3ApO2ZvbnQtd2VpZ2h0OjYwMDttYXJnaW46MTRweCAwfQoubW9kYWwgLmJ0bnN7ZGlzcGxheTpmbGV4O2ZsZXgtd3JhcDp3cmFwO2dhcDoxMHB4O2FsaWduLWl0ZW1zOmNlbnRlcn0KYnV0dG9uLmRhbmdlcntiYWNrZ3JvdW5kOnZhcigtLXN0b3ApO2JvcmRlci1jb2xvcjp2YXIoLS1zdG9wKTtjb2xvcjojZmZmO2ZvbnQtd2VpZ2h0OjcwMH0KCkBtZWRpYSAobWF4LXdpZHRoOjUyMHB4KXsKICAucm93ID4gYnV0dG9ue2dyaWQtdGVtcGxhdGUtY29sdW1uczo1MnB4IDFmciA5MHB4IDM2cHh9CiAgc3ZnLnNwYXJre3dpZHRoOjkwcHh9CiAgLnRhcHMgYnV0dG9ue2ZvbnQtc2l6ZToxcmVtfQp9CkBtZWRpYSBwcmludHsKICBib2R5e2JhY2tncm91bmQ6I2ZmZjtmb250LXNpemU6MTRwdH0KICAubm9wcmludCwuZW50cnksLnRvb2xzLC5pZGVhc3tkaXNwbGF5Om5vbmUhaW1wb3J0YW50fQogIC5jYXJke2JvcmRlci1jb2xvcjojOTk5O2JyZWFrLWluc2lkZTphdm9pZH0KICAucHJpbnRvbmx5e2Rpc3BsYXk6YmxvY2t9CiAgLnJvdyA+IGJ1dHRvbntncmlkLXRlbXBsYXRlLWNvbHVtbnM6NjBweCAxZnIgMTMwcHggNDRweH0KfQo8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5Pgo8ZGl2IGNsYXNzPSJ3cmFwIiBpZD0iYXBwIj48L2Rpdj4KPGlucHV0IHR5cGU9ImZpbGUiIGlkPSJsb2FkRmlsZSIgYWNjZXB0PSIuanNvbixhcHBsaWNhdGlvbi9qc29uIiBoaWRkZW4+CjxzY3JpcHQ+CihmdW5jdGlvbigpewoidXNlIHN0cmljdCI7CgovKiAtLS0tLS0tLS0tIFNraWxscyBhbmQgaWRlYXMgKGFueSBzdWJqZWN0KSAtLS0tLS0tLS0tICovCmNvbnN0IFNLSUxMUyA9IHsKICByZWFkaW5nOiB7IGxhYmVsOiAiUmVhZGluZyBhIHRleHQgaW4gbXkgc3ViamVjdCIsIGlkZWFzOiBbCiAgICAiQmVmb3JlIHJlYWRpbmcsIHByZXZpZXcgdGhlIDMgaGFyZGVzdCB3b3JkcyB3aXRoIGEgcXVpY2sgcGxhaW4tRW5nbGlzaCBtZWFuaW5nLiIsCiAgICAiUmVhZCBpdCBhbG91ZCB0b2dldGhlciBmaXJzdC4gVGhlbiB0aGV5IHJlcmVhZCBpdCBhbG9uZS4iLAogICAgIlN0b3AgYWZ0ZXIgZWFjaCBwYXJhZ3JhcGguIFRoZXkgc2F5IHRoZSBtYWluIHBvaW50IGluIG9uZSBzZW50ZW5jZS4iLAogICAgIkdpdmUgdGhlbSBhIGxldmVsZWQgdmVyc2lvbiBvZiB0aGUgc2FtZSB0ZXh0IChEaWZmaXQgY2FuIG1ha2Ugb25lIGluIGEgbWludXRlKS4iCiAgXX0sCiAgY2xhaW06IHsgbGFiZWw6ICJXcml0aW5nIGEgY2xhaW0gd2l0aCBldmlkZW5jZSIsIGlkZWFzOiBbCiAgICAiR2l2ZSBhIHNlbnRlbmNlIHN0YXJ0ZXI6IFwiSSB0aGluayBfX18gYmVjYXVzZSB0aGUgdGV4dCBzYXlzIF9fXy5cIiIsCiAgICAiU2hvdyBhIHN0cm9uZyBhbnN3ZXIgYW5kIGEgd2VhayBvbmUgc2lkZSBieSBzaWRlLiBBc2sgd2hpY2ggaXMgYmV0dGVyIGFuZCB3aHkuIiwKICAgICJIYXZlIHRoZW0gc2F5IHRoZWlyIGFuc3dlciBvdXQgbG91ZCBiZWZvcmUgdGhleSB3cml0ZSBpdC4iLAogICAgIkdyYWRlIG9uZSBwYXJ0IGF0IGEgdGltZTogY2xhaW0gZmlyc3QsIHRoZW4gZXZpZGVuY2UsIHRoZW4gZXhwbGFuYXRpb24uIgogIF19LAogIHZvY2FiOiB7IGxhYmVsOiAiVm9jYWJ1bGFyeSBvZiBteSBzdWJqZWN0IiwgaWRlYXM6IFsKICAgICJQaWNrIDMgdG8gNSBrZXkgd29yZHMgcGVyIHVuaXQuIFBsYWluIGRlZmluaXRpb24gcGx1cyBhIHBpY3R1cmUgb3IgZXhhbXBsZS4iLAogICAgIlR3by1taW51dGUgd29yZCByZXZpZXcgYXQgdGhlIHN0YXJ0IG9mIGNsYXNzLCBldmVyeSBjbGFzcy4iLAogICAgIlRoZXkgdXNlIGVhY2ggd29yZCBpbiBhIHNlbnRlbmNlIGFib3V0IHNvbWV0aGluZyBmcm9tIHRoZWlyIG93biBsaWZlLiIsCiAgICAiUHV0IHRoZSB3b3JkcyBvbiB0aGUgd2FsbCBhbmQgcG9pbnQgdG8gdGhlbSBldmVyeSB0aW1lIHlvdSBzYXkgdGhlbS4iCiAgXX0sCiAgcHJvYmxlbXM6IHsgbGFiZWw6ICJTb2x2aW5nIG11bHRpLXN0ZXAgcHJvYmxlbXMiLCBpZGVhczogWwogICAgIlNvbHZlIG9uZSBvdXQgbG91ZCwgZXZlcnkgc3RlcC4gVGhlbiBkbyBvbmUgdG9nZXRoZXIuIFRoZW4gdGhleSB0cnkuIiwKICAgICJHaXZlIHRoZW0gYSBzdGVwIGNoZWNrbGlzdCB0byBrZWVwIG9uIHRoZSBkZXNrLiIsCiAgICAiQ2hlY2sgdGhlaXIgZmlyc3Qgc3RlcCBiZWZvcmUgdGhleSBnbyBvbiB0byB0aGUgcmVzdC4iLAogICAgIlNhbWUgcHJvYmxlbSB0eXBlLCBudW1iZXJzIGNoYW5nZWQsIHRocmVlIGRheXMgaW4gYSByb3cuIgogIF19LAogIHByb2NlZHVyZTogeyBsYWJlbDogIkZvbGxvd2luZyBtdWx0aS1zdGVwIGRpcmVjdGlvbnMiLCBpZGVhczogWwogICAgIkJyZWFrIHRoZSBkaXJlY3Rpb25zIGludG8gbnVtYmVyZWQgc3RlcHMgb24gb25lIGNhcmQuIiwKICAgICJTaG93IGl0IG9uY2UsIHRoZW4gaGF2ZSB0aGVtIHRhbGsgeW91IHRocm91Z2ggaXQgYmVmb3JlIHRoZXkgZG8gaXQuIiwKICAgICJDaGVjayBhZnRlciBzdGVwIDEgYmVmb3JlIHRoZXkgbW92ZSBvbi4iLAogICAgIlBhcnRuZXIgdGhlbSB3aXRoIHNvbWVvbmUgd2hvIGRvZXMgaXQgd2VsbCwgYW5kIGhhdmUgdGhlbSBzd2l0Y2ggcm9sZXMuIgogIF19LAogIG90aGVyOiB7IGxhYmVsOiAiU29tZXRoaW5nIGVsc2UiLCBpZGVhczogWwogICAgIlNob3cgaXQsIGRvIG9uZSB0b2dldGhlciwgdGhlbiBsZXQgdGhlbSB0cnkuIiwKICAgICJTaG9ydCBwcmFjdGljZSwgb2Z0ZW4uIEZpdmUgbWludXRlcyBhIGRheSBiZWF0cyBvbmUgbG9uZyBzZXNzaW9uLiIsCiAgICAiT25lIHF1aWNrIHF1ZXN0aW9uIGF0IHRoZSBlbmQgb2YgY2xhc3MgdG8gY2hlY2sgaWYgaXQgc3R1Y2suIgogIF19Cn07CmNvbnN0IEZJUlNUID0gIkZpcnN0LCBjaGVjayB0aGUgYmFzaWNzOiBEaWQgdGhlIGV4dHJhIGhlbHAgYWN0dWFsbHkgaGFwcGVuIHRoaXMgd2Vlaz8gSXMgdGhpcyB0aGUgcmlnaHQgc2tpbGwsIG9yIGlzIHNvbWV0aGluZyBlYXJsaWVyIG1pc3Npbmc/IjsKCi8qIC0tLS0tLS0tLS0gU3RvcmFnZSAtLS0tLS0tLS0tICovCmNvbnN0IEtFWSA9ICJxdWlja2NoZWNrLXRpZXIyLXYxIjsKbGV0IHNhdmVPSyA9IHRydWU7CmZ1bmN0aW9uIGdvYWxPSyhzY2FsZSwgdil7IHJldHVybiBOdW1iZXIuaXNGaW5pdGUodikgJiYgKHNjYWxlID09PSAicnVicmljIiA/IHYgPj0gMSAmJiB2IDw9IDQgOiB2ID49IDAgJiYgdiA8PSAxMDApOyB9CmZ1bmN0aW9uIGNsZWFuKHMpewogIGlmKCFzIHx8IHR5cGVvZiBzICE9PSAib2JqZWN0IiB8fCAhQXJyYXkuaXNBcnJheShzLmdyb3VwcykpIHJldHVybiBudWxsOwogIGNvbnN0IG5ld0lkID0gKCkgPT4gTWF0aC5yYW5kb20oKS50b1N0cmluZygzNikuc2xpY2UoMiwxMCk7CiAgY29uc3QgZ3JvdXBzID0gcy5ncm91cHMuZmlsdGVyKGcgPT4gZyAmJiB0eXBlb2YgZyA9PT0gIm9iamVjdCIpLm1hcChnID0+IHsKICAgIGNvbnN0IHNjYWxlID0gZy5zY2FsZSA9PT0gInBjdCIgPyAicGN0IiA6ICJydWJyaWMiOwogICAgY29uc3Qgc3R1ZGVudHMgPSAoQXJyYXkuaXNBcnJheShnLnN0dWRlbnRzKSA/IGcuc3R1ZGVudHMgOiBbXSkKICAgICAgLmZpbHRlcih4ID0+IHggJiYgeC5pZCAhPSBudWxsICYmIHguY29kZSAhPSBudWxsKQogICAgICAubWFwKHggPT4geyBjb25zdCBvID0geyBpZDpTdHJpbmcoeC5pZCksIGNvZGU6U3RyaW5nKHguY29kZSkuc2xpY2UoMCwxMCkgfTsgaWYoeC5ub3RlKSBvLm5vdGUgPSBTdHJpbmcoeC5ub3RlKS5zbGljZSgwLDIwMCk7IHJldHVybiBvOyB9KTsKICAgIGNvbnN0IGNoZWNrcyA9IChBcnJheS5pc0FycmF5KGcuY2hlY2tzKSA/IGcuY2hlY2tzIDogW10pCiAgICAgIC5maWx0ZXIoYyA9PiBjICYmIC9eXGR7NH0tXGR7Mn0tXGR7Mn0kLy50ZXN0KGMuZGF0ZSkgJiYgYy5zY29yZXMgJiYgdHlwZW9mIGMuc2NvcmVzID09PSAib2JqZWN0IikKICAgICAgLm1hcChjID0+IHsgY29uc3Qgc2MgPSB7fTsgT2JqZWN0LmVudHJpZXMoYy5zY29yZXMpLmZvckVhY2goKFtrLHZdKSA9PiB7IGlmKHR5cGVvZiB2ID09PSAibnVtYmVyIiAmJiBpc0Zpbml0ZSh2KSkgc2Nba10gPSB2OyB9KTsgcmV0dXJuIHsgaWQ6U3RyaW5nKGMuaWQgfHwgbmV3SWQoKSksIGRhdGU6Yy5kYXRlLCBzY29yZXM6c2MgfTsgfSk7CiAgICBjb25zdCBnb2FsID0gTnVtYmVyKGcuZ29hbCk7CiAgICByZXR1cm4geyBpZDpTdHJpbmcoZy5pZCB8fCBuZXdJZCgpKSwgbmFtZTpTdHJpbmcoZy5uYW1lIHx8ICJHcm91cCIpLnNsaWNlKDAsNDApLCBza2lsbDogU0tJTExTW2cuc2tpbGxdID8gZy5za2lsbCA6ICJvdGhlciIsCiAgICAgIHNjYWxlLCBnb2FsOiBnb2FsT0soc2NhbGUsIGdvYWwpID8gZ29hbCA6IChzY2FsZSA9PT0gInJ1YnJpYyIgPyAzIDogODApLCBzdHVkZW50cywgY2hlY2tzIH07CiAgfSk7CiAgcmV0dXJuIHsgYWN0aXZlSWQ6IHMuYWN0aXZlSWQgIT0gbnVsbCA/IFN0cmluZyhzLmFjdGl2ZUlkKSA6IG51bGwsIGdyb3VwcyB9Owp9CmZ1bmN0aW9uIGxvYWQoKXsKICB0cnl7IGNvbnN0IHIgPSBsb2NhbFN0b3JhZ2UuZ2V0SXRlbShLRVkpOyBpZihyKXsgY29uc3QgcyA9IGNsZWFuKEpTT04ucGFyc2UocikpOyBpZihzKSByZXR1cm4gczsgfSB9Y2F0Y2goZSl7IHNhdmVPSyA9IGZhbHNlOyB9CiAgcmV0dXJuIHsgYWN0aXZlSWQ6bnVsbCwgZ3JvdXBzOltdIH07Cn0KZnVuY3Rpb24gc2F2ZSgpeyB0cnl7IGxvY2FsU3RvcmFnZS5zZXRJdGVtKEtFWSwgSlNPTi5zdHJpbmdpZnkoc3RhdGUpKTsgc2F2ZU9LID0gdHJ1ZTsgfWNhdGNoKGUpeyBzYXZlT0sgPSBmYWxzZTsgfSB9CmxldCBzdGF0ZSA9IGxvYWQoKTsKCi8qIC0tLS0tLS0tLS0gVUkgc3RhdGUgLS0tLS0tLS0tLSAqLwpsZXQgdmlldyA9ICJob21lIjsgICAgICAvLyBob21lIHwgc2V0dXAgfCBlZGl0CmxldCBvcGVuID0ge307ICAgICAgICAgIC8vIGV4cGFuZGVkIHN0dWRlbnQgcm93cwpsZXQgZHJhZnQgPSB7fTsgICAgICAgICAvLyBzY29yZXMgYmVpbmcgZW50ZXJlZApsZXQgZHJhZnREYXRlID0gIiI7CmxldCBmbGFzaCA9IHsgdDoiIiwgazoiIiB9OwpsZXQgc2V0dXBTY2FsZSA9ICJydWJyaWMiOwpsZXQgcmVzZXRPcGVuID0gZmFsc2UsIHJlc2V0Q2hvaWNlID0gImdyb3VwIiwgcmVzZXRNc2cgPSAiIjsKCi8qIC0tLS0tLS0tLS0gSGVscGVycyAtLS0tLS0tLS0tICovCmNvbnN0IHVpZCA9ICgpID0+IE1hdGgucmFuZG9tKCkudG9TdHJpbmcoMzYpLnNsaWNlKDIsMTApOwpjb25zdCBlc2MgPSBzID0+IFN0cmluZyhzKS5yZXBsYWNlKC9bJjw+IiddL2csIGMgPT4gKHsiJiI6IiZhbXA7IiwiPCI6IiZsdDsiLCI+IjoiJmd0OyIsJyInOiImcXVvdDsiLCInIjoiJiMzOTsifVtjXSkpOwpmdW5jdGlvbiB0b2RheSgpeyBjb25zdCBkID0gbmV3IERhdGUoKTsgcmV0dXJuIGQuZ2V0RnVsbFllYXIoKSsiLSIrU3RyaW5nKGQuZ2V0TW9udGgoKSsxKS5wYWRTdGFydCgyLCIwIikrIi0iK1N0cmluZyhkLmdldERhdGUoKSkucGFkU3RhcnQoMiwiMCIpOyB9CmNvbnN0IE1PTiA9IFsiSmFuIiwiRmViIiwiTWFyIiwiQXByIiwiTWF5IiwiSnVuIiwiSnVsIiwiQXVnIiwiU2VwIiwiT2N0IiwiTm92IiwiRGVjIl07CmZ1bmN0aW9uIG5pY2UoaXNvKXsgY29uc3QgW3ksbSxkXSA9IGlzby5zcGxpdCgiLSIpLm1hcChOdW1iZXIpOyByZXR1cm4gTU9OW20tMV0rIiAiK2Q7IH0KZnVuY3Rpb24gZ3JvdXAoKXsgcmV0dXJuIHN0YXRlLmdyb3Vwcy5maW5kKGcgPT4gZy5pZCA9PT0gc3RhdGUuYWN0aXZlSWQpIHx8IHN0YXRlLmdyb3Vwc1swXSB8fCBudWxsOyB9CmZ1bmN0aW9uIGxvb2tzTGlrZU5hbWUocyl7IHJldHVybiAvXltBLVphLXpdezIsfVxzK1tBLVphLXpdezIsfS8udGVzdChzKSB8fCAvXltBLVpdW2Etel17Myx9JC8udGVzdChzKTsgfQpmdW5jdGlvbiBzY2FsZVRleHQoZyl7IHJldHVybiBnLnNjYWxlID09PSAicnVicmljIiA/IGAke2cuZ29hbH0gb3V0IG9mIDRgIDogYCR7Zy5nb2FsfSVgOyB9CmZ1bmN0aW9uIGZtdChnLCB2KXsgcmV0dXJuIGcuc2NhbGUgPT09ICJydWJyaWMiID8gU3RyaW5nKHYpIDogdiArICIlIjsgfQoKLyogLS0tLS0tLS0tLSBUaGUgd2hvbGUgZGVjaXNpb24gcnVsZSAtLS0tLS0tLS0tICovCmZ1bmN0aW9uIHN0YXR1cyhnLCBzdCl7CiAgY29uc3QgcHRzID0gZy5jaGVja3Muc2xpY2UoKS5zb3J0KChhLGIpID0+IGEuZGF0ZSA8IGIuZGF0ZSA/IC0xIDogMSkKICAgIC5tYXAoYyA9PiBjLnNjb3Jlc1tzdC5pZF0pLmZpbHRlcih2ID0+IHR5cGVvZiB2ID09PSAibnVtYmVyIik7CiAgY29uc3QgdG9sID0gZy5zY2FsZSA9PT0gInJ1YnJpYyIgPyAwIDogNDsKICBjb25zdCByID0geyBwdHMsIGxhdGVzdDogcHRzW3B0cy5sZW5ndGgtMV0gfTsKICBpZighcHRzLmxlbmd0aCkgcmV0dXJuIE9iamVjdC5hc3NpZ24ociwgeyBrZXk6ImdyYXkiLCB3b3JkOiJObyBzY29yZXMgeWV0Iiwgd2h5OiJBZGQgYSBzY29yZSBhYm92ZS4iIH0pOwogIGlmKHIubGF0ZXN0ID49IGcuZ29hbCkgcmV0dXJuIE9iamVjdC5hc3NpZ24ociwgeyBrZXk6ImdvIiwgd29yZDoiT24gdHJhY2siLCB3aHk6IkF0IG9yIGFib3ZlIHRoZSBnb2FsLiIgfSk7CiAgaWYocHRzLmxlbmd0aCA8IDMpIHJldHVybiBPYmplY3QuYXNzaWduKHIsIHsga2V5OiJncmF5Iiwgd29yZDoiVG9vIGVhcmx5Iiwgd2h5OmBCZWxvdyBnb2FsLiAkezMgLSBwdHMubGVuZ3RofSBtb3JlICR7cHRzLmxlbmd0aCA9PT0gMiA/ICJzY29yZSIgOiAic2NvcmVzIn0gdG8gc2VlIGEgZGlyZWN0aW9uLmAgfSk7CiAgY29uc3QgbGFzdDMgPSBwdHMuc2xpY2UoLTMpLCBjaGFuZ2UgPSBsYXN0M1syXSAtIGxhc3QzWzBdOwogIGlmKHB0cy5sZW5ndGggPj0gNCl7CiAgICBjb25zdCBsYXN0NCA9IHB0cy5zbGljZSgtNCk7CiAgICBpZihNYXRoLm1heCguLi5sYXN0NCkgLSBNYXRoLm1pbiguLi5sYXN0NCkgPD0gdG9sKSByZXR1cm4gT2JqZWN0LmFzc2lnbihyLCB7IGtleToic3RvcCIsIHdvcmQ6IkNoYW5nZSBzb21ldGhpbmciLCB3aHk6IlN0dWNrIGZvciA0IGNoZWNrcyBpbiBhIHJvdy4iIH0pOwogIH0KICBpZihjaGFuZ2UgPiB0b2wpIHJldHVybiBPYmplY3QuYXNzaWduKHIsIHsga2V5OiJnbyIsIHdvcmQ6Ik9uIHRyYWNrIiwgd2h5OiJHcm93aW5nIHRvd2FyZCB0aGUgZ29hbC4iIH0pOwogIGlmKGNoYW5nZSA8IC10b2wpIHJldHVybiBPYmplY3QuYXNzaWduKHIsIHsga2V5OiJzdG9wIiwgd29yZDoiQ2hhbmdlIHNvbWV0aGluZyIsIHdoeToiRHJvcHBlZCBvdmVyIHRoZSBsYXN0IDMgY2hlY2tzLiIgfSk7CiAgcmV0dXJuIE9iamVjdC5hc3NpZ24ociwgeyBrZXk6IndhdGNoIiwgd29yZDoiV2F0Y2giLCB3aHk6Ik5vIGNoYW5nZSBvdmVyIHRoZSBsYXN0IDMgY2hlY2tzLiIgfSk7Cn0KCmZ1bmN0aW9uIHNwYXJrKGcsIHB0cyl7CiAgY29uc3QgVz0xMzAsIEg9NDAsIGxvID0gZy5zY2FsZSA9PT0gInJ1YnJpYyIgPyAxIDogMCwgaGkgPSBnLnNjYWxlID09PSAicnVicmljIiA/IDQgOiAxMDA7CiAgY29uc3QgeSA9IHYgPT4gSCAtIDQgLSAodiAtIGxvKS8oaGkgLSBsbykqKEggLSA4KTsKICBjb25zdCBuID0gcHRzLmxlbmd0aCwgeCA9IGkgPT4gbiA8PSAxID8gVy8yIDogNiArIGkqKFctMTIpLyhuLTEpOwogIGxldCBzID0gYDxzdmcgY2xhc3M9InNwYXJrIiB2aWV3Qm94PSIwIDAgJHtXfSAke0h9IiBhcmlhLWhpZGRlbj0idHJ1ZSI+YDsKICBzICs9IGA8bGluZSB4MT0iMCIgeDI9IiR7V30iIHkxPSIke3koZy5nb2FsKX0iIHkyPSIke3koZy5nb2FsKX0iIHN0cm9rZT0iIzlBQTZCMiIgc3Ryb2tlLWRhc2hhcnJheT0iNCA0Ii8+YDsKICBpZihuID4gMSkgcyArPSBgPHBvbHlsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI0NUNBOCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHBvaW50cz0iJHtwdHMubWFwKCh2LGkpPT54KGkpKyIsIit5KHYpKS5qb2luKCIgIil9Ii8+YDsKICBwdHMuZm9yRWFjaCgodixpKSA9PiBzICs9IGA8Y2lyY2xlIGN4PSIke3goaSl9IiBjeT0iJHt5KHYpfSIgcj0iMy41IiBmaWxsPSIjMjQ1Q0E4Ii8+YCk7CiAgcmV0dXJuIHMgKyBgPC9zdmc+YDsKfQoKLyogLS0tLS0tLS0tLSBSZW5kZXIgLS0tLS0tLS0tLSAqLwpmdW5jdGlvbiByZW5kZXIoKXsKICBjb25zdCBhcHAgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiYXBwIik7CiAgY29uc3QgZyA9IGdyb3VwKCk7CiAgaWYoIWcgfHwgdmlldyA9PT0gInNldHVwIil7IGFwcC5pbm5lckhUTUwgPSBzZXR1cEhUTUwoKTsgcmV0dXJuOyB9CiAgc3RhdGUuYWN0aXZlSWQgPSBnLmlkOwogIGlmKHZpZXcgPT09ICJlZGl0Iil7IGFwcC5pbm5lckhUTUwgPSBlZGl0SFRNTChnKTsgcmV0dXJuOyB9CgogIGNvbnN0IHJvd3MgPSBnLnN0dWRlbnRzLm1hcChzID0+ICh7IHMsIHN0OiBzdGF0dXMoZywgcykgfSkpOwogIGNvbnN0IGp1ZGdlZCA9IHJvd3MuZmlsdGVyKHIgPT4gci5zdC5rZXkgIT09ICJncmF5Iik7CiAgY29uc3Qgc3R1Y2sgPSBqdWRnZWQuZmlsdGVyKHIgPT4gci5zdC5rZXkgPT09ICJ3YXRjaCIgfHwgci5zdC5rZXkgPT09ICJzdG9wIik7CiAgbGV0IGJhbm5lciA9ICIiOwogIGlmKGp1ZGdlZC5sZW5ndGggPj0gMiAmJiBzdHVjay5sZW5ndGggLyBqdWRnZWQubGVuZ3RoID4gMC41KXsKICAgIGJhbm5lciA9IGA8ZGl2IGNsYXNzPSJiYW5uZXIiPk1vc3Qgb2YgdGhpcyBncm91cCBpc24ndCBtb3ZpbmcuPHNwYW4+V2hlbiB0aGF0IGhhcHBlbnMsIGxvb2sgYXQgdGhlIHBsYW4gYmVmb3JlIHRoZSBraWRzOiBJcyB0aGUgZXh0cmEgaGVscCBoYXBwZW5pbmc/IElzIGl0IHRoZSByaWdodCBza2lsbD8gSXMgdGhlIGdyb3VwIHRvbyBiaWc/PC9zcGFuPjwvZGl2PmA7CiAgfSBlbHNlIGlmKGp1ZGdlZC5sZW5ndGggJiYgIXN0dWNrLmxlbmd0aCl7CiAgICBiYW5uZXIgPSBgPGRpdiBjbGFzcz0iYmFubmVyIGdvb2QiPkV2ZXJ5b25lIHdpdGggZW5vdWdoIHNjb3JlcyBpcyBvbiB0cmFjay48c3Bhbj5LZWVwIGRvaW5nIHdoYXQgeW91J3JlIGRvaW5nLjwvc3Bhbj48L2Rpdj5gOwogIH0KCiAgY29uc3QgZ3JvdXBQaWNrZXIgPSBgPG5hdiBjbGFzcz0idGFicyBub3ByaW50IiBhcmlhLWxhYmVsPSJZb3VyIGdyb3VwcyI+JHtzdGF0ZS5ncm91cHMubWFwKHggPT4gYDxidXR0b24gY2xhc3M9InRhYiIgZGF0YS1hY3Q9InBpY2siIGRhdGEtaWQ9IiR7eC5pZH0iIGFyaWEtY3VycmVudD0iJHt4LmlkPT09Zy5pZH0iPiR7ZXNjKHgubmFtZSl9PC9idXR0b24+YCkuam9pbigiIil9PGJ1dHRvbiBjbGFzcz0idGFiIGFkZCIgZGF0YS1hY3Q9Im5ld2dyb3VwIj4rIE5ldyBncm91cDwvYnV0dG9uPjwvbmF2PmA7CgogIGFwcC5pbm5lckhUTUwgPSBgCiAgICAke2dyb3VwUGlja2VyfQogICAgPGgxPiR7ZXNjKGcubmFtZSl9PC9oMT4KICAgIDxwIGNsYXNzPSJzdWIiPiR7ZXNjKFNLSUxMU1tnLnNraWxsXS5sYWJlbCl9LiBHb2FsOiAke3NjYWxlVGV4dChnKX0uPC9wPgogICAgPHAgY2xhc3M9InByaW50b25seSI+UHJpbnRlZCAke25pY2UodG9kYXkoKSl9LiBTY29yZXMgYnkgZGF0ZTogJHtnLmNoZWNrcy5zbGljZSgpLnNvcnQoKGEsYik9PmEuZGF0ZTxiLmRhdGU/LTE6MSkubWFwKGM9Pm5pY2UoYy5kYXRlKSkuam9pbigiLCAiKSB8fCAibm9uZSJ9LjwvcD4KICAgIDxzZWN0aW9uIGNsYXNzPSJjYXJkIGVudHJ5IG5vcHJpbnQiPgogICAgICA8aDI+QWRkIHNjb3JlczwvaDI+CiAgICAgIDxkaXYgY2xhc3M9ImRhdGVyb3ciPjxpbnB1dCB0eXBlPSJkYXRlIiBpZD0iY2RhdGUiIHZhbHVlPSIke2RyYWZ0RGF0ZSB8fCB0b2RheSgpfSIgYXJpYS1sYWJlbD0iRGF0ZSI+PC9kaXY+CiAgICAgICR7Zy5zdHVkZW50cy5tYXAocyA9PiBgPGRpdiBjbGFzcz0ia2lkIj48c3BhbiBjbGFzcz0iY29kZSI+JHtlc2Mocy5jb2RlKX08L3NwYW4+JHsKICAgICAgICBnLnNjYWxlID09PSAicnVicmljIgogICAgICAgID8gYDxkaXYgY2xhc3M9InRhcHMiIHJvbGU9Imdyb3VwIiBhcmlhLWxhYmVsPSJTY29yZSBmb3IgJHtlc2Mocy5jb2RlKX0iPiR7WzEsMiwzLDRdLm1hcCh2ID0+IGA8YnV0dG9uIGRhdGEtdGFwPSIke3MuaWR9IiBkYXRhLXY9IiR7dn0iIGFyaWEtcHJlc3NlZD0iJHtkcmFmdFtzLmlkXT09PXZ9Ij4ke3Z9PC9idXR0b24+YCkuam9pbigiIil9PC9kaXY+YAogICAgICAgIDogYDxpbnB1dCBjbGFzcz0icGN0IiB0eXBlPSJudW1iZXIiIG1pbj0iMCIgbWF4PSIxMDAiIGlucHV0bW9kZT0ibnVtZXJpYyIgZGF0YS1wY3Q9IiR7cy5pZH0iIHZhbHVlPSIke2RyYWZ0W3MuaWRdID8/ICIifSIgYXJpYS1sYWJlbD0iUGVyY2VudCBmb3IgJHtlc2Mocy5jb2RlKX0iPiA8c3BhbiBjbGFzcz0iaGludCI+JTwvc3Bhbj5gCiAgICAgIH08L2Rpdj5gKS5qb2luKCIiKX0KICAgICAgPHAgY2xhc3M9ImhpbnQiIHN0eWxlPSJtYXJnaW4tdG9wOjhweCI+U2tpcCBhbnlvbmUgd2hvIHdhcyBhYnNlbnQuPC9wPgogICAgICA8YnV0dG9uIGNsYXNzPSJtYWluIiBkYXRhLWFjdD0ic2F2ZXNjb3JlcyI+U2F2ZSBzY29yZXM8L2J1dHRvbj4KICAgICAgPHAgY2xhc3M9Im1zZyAke2ZsYXNoLmt9IiByb2xlPSJzdGF0dXMiPiR7ZXNjKGZsYXNoLnQpfTwvcD4KICAgIDwvc2VjdGlvbj4KCiAgICAke2Jhbm5lcn0KICAgIDxzZWN0aW9uIGNsYXNzPSJjYXJkIiBhcmlhLWxhYmVsPSJTdHVkZW50cyI+CiAgICAgICR7cm93cy5tYXAoKHtzLCBzdH0pID0+IGA8ZGl2IGNsYXNzPSJyb3ciPgogICAgICAgIDxidXR0b24gZGF0YS1hY3Q9InRvZ2dsZSIgZGF0YS1pZD0iJHtzLmlkfSIgYXJpYS1leHBhbmRlZD0iJHshIW9wZW5bcy5pZF19Ij4KICAgICAgICAgIDxzcGFuIGNsYXNzPSJjb2RlIj4ke2VzYyhzLmNvZGUpfTwvc3Bhbj4KICAgICAgICAgIDxzcGFuIGNsYXNzPSJ3b3JkIHctJHtzdC5rZXl9Ij4ke3N0LndvcmR9PHNwYW4gY2xhc3M9IndoeSI+JHtzdC53aHl9PC9zcGFuPiR7cy5ub3RlID8gYDxzcGFuIGNsYXNzPSJ3aHkgbm90ZSI+Tm90ZTogJHtlc2Mocy5ub3RlKX08L3NwYW4+YCA6ICIifTwvc3Bhbj4KICAgICAgICAgICR7c3BhcmsoZywgc3QucHRzKX0KICAgICAgICAgIDxzcGFuIGNsYXNzPSJsYXRlc3QiPiR7c3QubGF0ZXN0ICE9PSB1bmRlZmluZWQgPyBmbXQoZywgc3QubGF0ZXN0KSA6ICIifTwvc3Bhbj4KICAgICAgICA8L2J1dHRvbj4KICAgICAgICAke29wZW5bcy5pZF0gPyBub3Rlc0hUTUwocykgKyBpZGVhc0hUTUwoZywgc3QpIDogIiJ9CiAgICAgIDwvZGl2PmApLmpvaW4oIiIpfQogICAgPC9zZWN0aW9uPgoKICAgIDxkaXYgY2xhc3M9InRvb2xzIG5vcHJpbnQiPgogICAgICA8YnV0dG9uIGNsYXNzPSJsaW5rIiBkYXRhLWFjdD0icHJpbnQiPlByaW50IGZvciBkYXRhIG1lZXRpbmc8L2J1dHRvbj4KICAgICAgPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImVkaXQiPkVkaXQgZ3JvdXA8L2J1dHRvbj4KICAgICAgPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImJhY2t1cCI+U2F2ZSBhIGNvcHk8L2J1dHRvbj4KICAgICAgPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImxvYWRjb3B5Ij5Mb2FkIGEgY29weTwvYnV0dG9uPgogICAgICA8YnV0dG9uIGNsYXNzPSJsaW5rIiBkYXRhLWFjdD0icmVzZXQiIHN0eWxlPSJjb2xvcjp2YXIoLS1zdG9wKSI+UmVzZXQgZGF0YTwvYnV0dG9uPgogICAgPC9kaXY+CiAgICA8cCBjbGFzcz0iaGludCBub3ByaW50IiBzdHlsZT0idGV4dC1hbGlnbjpjZW50ZXI7bWFyZ2luLXRvcDoxMHB4Ij4ke3NhdmVPSyA/ICJTYXZlZCBvbiB0aGlzIGRldmljZSBvbmx5LiBObyBuYW1lcywgbm8gaW50ZXJuZXQuIiA6ICJUaGlzIGJyb3dzZXIgd29uJ3Qgc2F2ZS4gVXNlIFNhdmUgYSBjb3B5IGJlZm9yZSBjbG9zaW5nLiJ9PC9wPgogICAgJHtyZXNldE9wZW4gPyByZXNldEhUTUwoZykgOiAiIn1gOwogIGZsYXNoID0geyB0OiIiLCBrOiIiIH07CiAgaWYocmVzZXRPcGVuKXsgY29uc3QgZiA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy5tb2RhbCBpbnB1dFtuYW1lPSJycyJdOmNoZWNrZWQnKTsgaWYoZikgZi5mb2N1cygpOyB9Cn0KCmZ1bmN0aW9uIHJlc2V0SFRNTChnKXsKICByZXR1cm4gYDxkaXYgY2xhc3M9Im92ZXJsYXkgbm9wcmludCIgcm9sZT0iZGlhbG9nIiBhcmlhLW1vZGFsPSJ0cnVlIiBhcmlhLWxhYmVsbGVkYnk9InJ0Ij4KICAgIDxkaXYgY2xhc3M9Im1vZGFsIj4KICAgICAgPGgyIGlkPSJydCI+UmVzZXQgZGF0YTwvaDI+CiAgICAgIDxsYWJlbCBjbGFzcz0ib3B0Ij48aW5wdXQgdHlwZT0icmFkaW8iIG5hbWU9InJzIiB2YWx1ZT0iZ3JvdXAiJHtyZXNldENob2ljZT09PSJncm91cCI/IiBjaGVja2VkIjoiIn0+PHNwYW4+Q2xlYXIgc2NvcmVzIGZvciAke2VzYyhnLm5hbWUpfTxzcGFuIGNsYXNzPSJoaW50Ij5LZWVwcyB0aGUgc3R1ZGVudHMgYW5kIHNldHRpbmdzLiBHb29kIGZvciBhIG5ldyBncmFkaW5nIHBlcmlvZC48L3NwYW4+PC9zcGFuPjwvbGFiZWw+CiAgICAgIDxsYWJlbCBjbGFzcz0ib3B0Ij48aW5wdXQgdHlwZT0icmFkaW8iIG5hbWU9InJzIiB2YWx1ZT0iYWxsIiR7cmVzZXRDaG9pY2U9PT0iYWxsIj8iIGNoZWNrZWQiOiIifT48c3Bhbj5FcmFzZSBldmVyeXRoaW5nIG9uIHRoaXMgZGV2aWNlPHNwYW4gY2xhc3M9ImhpbnQiPkFsbCBncm91cHMsIHN0dWRlbnRzLCBhbmQgc2NvcmVzLjwvc3Bhbj48L3NwYW4+PC9sYWJlbD4KICAgICAgPHAgY2xhc3M9Indhcm4iPlRoaXMgY2FuJ3QgYmUgdW5kb25lLiBEb3dubG9hZCBhIGNvcHkgZmlyc3QgaWYgeW91IG1pZ2h0IHdhbnQgdGhpcyBkYXRhIGxhdGVyLjwvcD4KICAgICAgPGRpdiBjbGFzcz0iYnRucyI+CiAgICAgICAgPGJ1dHRvbiBkYXRhLWFjdD0iZGxnLWRvd25sb2FkIj5Eb3dubG9hZCBhIGNvcHk8L2J1dHRvbj4KICAgICAgICA8YnV0dG9uIGNsYXNzPSJkYW5nZXIiIGRhdGEtYWN0PSJkbGctcmVzZXQiPlJlc2V0PC9idXR0b24+CiAgICAgICAgPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImRsZy1jYW5jZWwiPkNhbmNlbDwvYnV0dG9uPgogICAgICA8L2Rpdj4KICAgICAgPHAgY2xhc3M9Im1zZyBvayIgcm9sZT0ic3RhdHVzIj4ke2VzYyhyZXNldE1zZyl9PC9wPgogICAgPC9kaXY+CiAgPC9kaXY+YDsKfQoKZnVuY3Rpb24gbm90ZXNIVE1MKHMpewogIHJldHVybiBgPGRpdiBjbGFzcz0iaWRlYXMgbm90ZWJveCI+PGxhYmVsIGZvcj0ibm90ZS0ke3MuaWR9IiBzdHlsZT0ibWFyZ2luLXRvcDowIj5Ob3RlcyA8c3BhbiBjbGFzcz0iaGludCI+QXR0ZW5kYW5jZSwgd2hhdCB5b3Ugbm90aWNlZCwgd2hhdCB5b3UgdHJpZWQuIE5vIG5hbWVzIG9yIHByaXZhdGUgZGV0YWlscy48L3NwYW4+PC9sYWJlbD48dGV4dGFyZWEgaWQ9Im5vdGUtJHtzLmlkfSIgZGF0YS1ub3RlPSIke3MuaWR9IiBtYXhsZW5ndGg9IjIwMCI+JHtlc2Mocy5ub3RlIHx8ICIiKX08L3RleHRhcmVhPjwvZGl2PmA7Cn0KCmZ1bmN0aW9uIGlkZWFzSFRNTChnLCBzdCl7CiAgY29uc3QgaWRlYXMgPSBTS0lMTFNbZy5za2lsbF0uaWRlYXM7CiAgaWYoc3Qua2V5ID09PSAiZ28iKSByZXR1cm4gYDxkaXYgY2xhc3M9ImlkZWFzIj48cD48Yj5LZWVwIGRvaW5nIHdoYXQgeW91J3JlIGRvaW5nLjwvYj4gSWYgdGhleSBzdGF5IGF0IGdvYWwgZm9yIDIgb3IgMyBtb3JlIGNoZWNrcywgdGhleSBtYXkgYmUgcmVhZHkgdG8gbGVhdmUgdGhlIGdyb3VwLjwvcD48L2Rpdj5gOwogIGNvbnN0IGZpcnN0ID0gc3Qua2V5ID09PSAic3RvcCIgfHwgc3Qua2V5ID09PSAid2F0Y2giID8gYDxwIGNsYXNzPSJmaXJzdCI+JHtGSVJTVH08L3A+YCA6ICIiOwogIGNvbnN0IGxlYWQgPSBzdC5rZXkgPT09ICJzdG9wIiA/ICJUaGVuIHRyeSBvbmUgb2YgdGhlc2U6IiA6IHN0LmtleSA9PT0gIndhdGNoIiA/ICJUcnkgb25lIGNoYW5nZToiIDogIklkZWFzIHRvIHN0YXJ0IHdpdGg6IjsKICByZXR1cm4gYDxkaXYgY2xhc3M9ImlkZWFzIj4ke2ZpcnN0fTxwPjxiPiR7bGVhZH08L2I+PC9wPjxvbD4ke2lkZWFzLm1hcChpID0+IGA8bGk+JHtlc2MoaSl9PC9saT5gKS5qb2luKCIiKX08L29sPjwvZGl2PmA7Cn0KCmZ1bmN0aW9uIHNldHVwSFRNTCgpewogIGNvbnN0IGZpcnN0ID0gIXN0YXRlLmdyb3Vwcy5sZW5ndGg7CiAgcmV0dXJuIGAKICAgIDxoMT5RdWljayBDaGVjazwvaDE+CiAgICA8cCBjbGFzcz0ic3ViIj5UcmFjayBhIHNtYWxsIGdyb3VwIGluIHVuZGVyIGEgbWludXRlIGEgd2Vlay4gTm8gaW50ZXJuZXQgbmVlZGVkLjwvcD4KICAgIDxzZWN0aW9uIGNsYXNzPSJjYXJkIj4KICAgICAgPGgyPiR7Zmlyc3QgPyAiU2V0IHVwIHlvdXIgZ3JvdXAiIDogIkFkZCBhIGdyb3VwIn08L2gyPgogICAgICA8bGFiZWwgZm9yPSJzLXNraWxsIj5XaGF0IHNraWxsIGFyZSB5b3Ugd29ya2luZyBvbj88L2xhYmVsPgogICAgICA8c2VsZWN0IGlkPSJzLXNraWxsIj4ke09iamVjdC5lbnRyaWVzKFNLSUxMUykubWFwKChbayx2XSkgPT4gYDxvcHRpb24gdmFsdWU9IiR7a30iPiR7ZXNjKHYubGFiZWwpfTwvb3B0aW9uPmApLmpvaW4oIiIpfTwvc2VsZWN0PgogICAgICA8bGFiZWw+SG93IGRvIHlvdSBzY29yZSBpdD88L2xhYmVsPgogICAgICA8ZGl2IGNsYXNzPSJjaG9pY2UiPgogICAgICAgIDxidXR0b24gZGF0YS1zY2FsZT0icnVicmljIiBhcmlhLXByZXNzZWQ9IiR7c2V0dXBTY2FsZT09PSJydWJyaWMifSI+MSB0byA0IHJ1YnJpYzwvYnV0dG9uPgogICAgICAgIDxidXR0b24gZGF0YS1zY2FsZT0icGN0IiBhcmlhLXByZXNzZWQ9IiR7c2V0dXBTY2FsZT09PSJwY3QifSI+UGVyY2VudDwvYnV0dG9uPgogICAgICA8L2Rpdj4KICAgICAgPGxhYmVsIGZvcj0icy1nb2FsIj5Hb2FsIDxzcGFuIGNsYXNzPSJoaW50Ij4od2hhdCAiZ290IGl0IiBsb29rcyBsaWtlKTwvc3Bhbj48L2xhYmVsPgogICAgICA8aW5wdXQgaWQ9InMtZ29hbCIgdHlwZT0ibnVtYmVyIiB2YWx1ZT0iJHtzZXR1cFNjYWxlPT09InJ1YnJpYyIgPyAzIDogODB9IiBtaW49IiR7c2V0dXBTY2FsZT09PSJydWJyaWMiPzE6MH0iIG1heD0iJHtzZXR1cFNjYWxlPT09InJ1YnJpYyI/NDoxMDB9Ij4KICAgICAgPGxhYmVsIGZvcj0icy1jb2RlcyI+U3R1ZGVudCBjb2RlcyA8c3BhbiBjbGFzcz0iaGludCI+KG5vIG5hbWVzLCBzZXBhcmF0ZSB3aXRoIGNvbW1hcyk8L3NwYW4+PC9sYWJlbD4KICAgICAgPGlucHV0IGlkPSJzLWNvZGVzIiB2YWx1ZT0iUzEsIFMyLCBTMywgUzQiPgogICAgICA8bGFiZWwgZm9yPSJzLW5hbWUiPkdyb3VwIG5hbWUgPHNwYW4gY2xhc3M9ImhpbnQiPihvcHRpb25hbCk8L3NwYW4+PC9sYWJlbD4KICAgICAgPGlucHV0IGlkPSJzLW5hbWUiIHBsYWNlaG9sZGVyPSIzcmQgaG91ciBiaW9sb2d5IiBtYXhsZW5ndGg9IjQwIj4KICAgICAgPHAgY2xhc3M9ImhpbnQiIHN0eWxlPSJtYXJnaW4tdG9wOjE0cHgiPlRpcDogc2NvcmUgdGhlIHNhbWUgc2tpbGwgZWFjaCB0aW1lLCBldmVuIHdoZW4gdGhlIHVuaXQgY2hhbmdlcy4gVGhhdCdzIHdoYXQgbWFrZXMgdGhlIGdyYXBoIG1lYW4gc29tZXRoaW5nLjwvcD4KICAgICAgPGJ1dHRvbiBjbGFzcz0ibWFpbiIgZGF0YS1hY3Q9ImNyZWF0ZSIgc3R5bGU9Im1hcmdpbi10b3A6OHB4Ij5TdGFydCB0cmFja2luZzwvYnV0dG9uPgogICAgICAke2ZpcnN0ID8gYDxidXR0b24gY2xhc3M9ImxpbmsiIGRhdGEtYWN0PSJsb2FkY29weSIgc3R5bGU9Im1hcmdpbi10b3A6OHB4Ij5Mb2FkIGEgc2F2ZWQgY29weTwvYnV0dG9uPmAgOiBgPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImNhbmNlbCI+Q2FuY2VsPC9idXR0b24+YH0KICAgIDwvc2VjdGlvbj5gOwp9CgpmdW5jdGlvbiBlZGl0SFRNTChnKXsKICBjb25zdCBjaGVja3MgPSBnLmNoZWNrcy5zbGljZSgpLnNvcnQoKGEsYikgPT4gYS5kYXRlIDwgYi5kYXRlID8gMSA6IC0xKTsKICByZXR1cm4gYAogICAgPGgxPkVkaXQgJHtlc2MoZy5uYW1lKX08L2gxPgogICAgPHNlY3Rpb24gY2xhc3M9ImNhcmQiPgogICAgICA8bGFiZWwgZm9yPSJlLW5hbWUiPkdyb3VwIG5hbWU8L2xhYmVsPjxpbnB1dCBpZD0iZS1uYW1lIiB2YWx1ZT0iJHtlc2MoZy5uYW1lKX0iIG1heGxlbmd0aD0iNDAiPgogICAgICA8bGFiZWwgZm9yPSJlLXNraWxsIj5Ta2lsbDwvbGFiZWw+CiAgICAgIDxzZWxlY3QgaWQ9ImUtc2tpbGwiPiR7T2JqZWN0LmVudHJpZXMoU0tJTExTKS5tYXAoKFtrLHZdKSA9PiBgPG9wdGlvbiB2YWx1ZT0iJHtrfSIke2s9PT1nLnNraWxsPyIgc2VsZWN0ZWQiOiIifT4ke2VzYyh2LmxhYmVsKX08L29wdGlvbj5gKS5qb2luKCIiKX08L3NlbGVjdD4KICAgICAgPGxhYmVsIGZvcj0iZS1nb2FsIj5Hb2FsICgke2cuc2NhbGUgPT09ICJydWJyaWMiID8gIjEgdG8gNCIgOiAicGVyY2VudCJ9KTwvbGFiZWw+PGlucHV0IGlkPSJlLWdvYWwiIHR5cGU9Im51bWJlciIgdmFsdWU9IiR7Zy5nb2FsfSIgbWluPSIke2cuc2NhbGU9PT0icnVicmljIj8xOjB9IiBtYXg9IiR7Zy5zY2FsZT09PSJydWJyaWMiPzQ6MTAwfSI+CiAgICAgIDxsYWJlbD5TdHVkZW50czwvbGFiZWw+CiAgICAgIDx1bCBjbGFzcz0ic3R1bGlzdCI+JHtnLnN0dWRlbnRzLm1hcChzID0+IGA8bGk+PGI+JHtlc2Mocy5jb2RlKX08L2I+PGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImRlbHN0dSIgZGF0YS1pZD0iJHtzLmlkfSI+UmVtb3ZlPC9idXR0b24+PC9saT5gKS5qb2luKCIiKX08L3VsPgogICAgICA8ZGl2IGNsYXNzPSJhZGRyb3ciPjxpbnB1dCBpZD0iZS1uZXciIHBsYWNlaG9sZGVyPSJOZXcgY29kZSIgbWF4bGVuZ3RoPSIxMCIgYXJpYS1sYWJlbD0iTmV3IHN0dWRlbnQgY29kZSI+PGJ1dHRvbiBkYXRhLWFjdD0iYWRkc3R1Ij5BZGQ8L2J1dHRvbj48L2Rpdj4KICAgICAgJHtjaGVja3MubGVuZ3RoID8gYDxsYWJlbD5QYXN0IHNjb3JlIGRheXM8L2xhYmVsPjx1bCBjbGFzcz0iaGlzdG9yeSI+JHtjaGVja3MubWFwKGMgPT4gYDxsaT4ke25pY2UoYy5kYXRlKX0gPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImRlbGNoZWNrIiBkYXRhLWlkPSIke2MuaWR9Ij5EZWxldGU8L2J1dHRvbj48L2xpPmApLmpvaW4oIiIpfTwvdWw+YCA6ICIifQogICAgICA8YnV0dG9uIGNsYXNzPSJtYWluIiBkYXRhLWFjdD0ic2F2ZWVkaXQiIHN0eWxlPSJtYXJnaW4tdG9wOjE2cHgiPkRvbmU8L2J1dHRvbj4KICAgICAgPGJ1dHRvbiBjbGFzcz0ibGluayIgZGF0YS1hY3Q9ImRlbGdyb3VwIiBzdHlsZT0iY29sb3I6dmFyKC0tc3RvcCk7bWFyZ2luLXRvcDo4cHgiPkRlbGV0ZSB0aGlzIGdyb3VwPC9idXR0b24+CiAgICA8L3NlY3Rpb24+YDsKfQoKLyogLS0tLS0tLS0tLSBBY3Rpb25zIC0tLS0tLS0tLS0gKi8KZnVuY3Rpb24gcmVuZGVyS2VlcGluZ0VkaXRzKCl7CiAgY29uc3QgaWRzID0gWyJlLW5hbWUiLCJlLXNraWxsIiwiZS1nb2FsIl0sIGtlZXAgPSB7fTsKICBpZHMuZm9yRWFjaChpID0+IHsgY29uc3QgZWwgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZChpKTsgaWYoZWwpIGtlZXBbaV0gPSBlbC52YWx1ZTsgfSk7CiAgcmVuZGVyKCk7CiAgaWRzLmZvckVhY2goaSA9PiB7IGNvbnN0IGVsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoaSk7IGlmKGVsICYmIGkgaW4ga2VlcCkgZWwudmFsdWUgPSBrZWVwW2ldOyB9KTsKfQpmdW5jdGlvbiBjb2Rlc0Zyb20odGV4dCl7CiAgcmV0dXJuIFsuLi5uZXcgU2V0KHRleHQuc3BsaXQoIiwiKS5tYXAodCA9PiB0LnRyaW0oKSkuZmlsdGVyKEJvb2xlYW4pLm1hcCh0ID0+IHQuc2xpY2UoMCwxMCkpKV07Cn0KZnVuY3Rpb24gb2tDb2Rlcyhjb2Rlcyl7CiAgY29uc3QgbmFtZXMgPSBjb2Rlcy5maWx0ZXIobG9va3NMaWtlTmFtZSk7CiAgcmV0dXJuICFuYW1lcy5sZW5ndGggfHwgY29uZmlybShgJHtuYW1lcy5qb2luKCIsICIpfSAke25hbWVzLmxlbmd0aCA+IDEgPyAibG9vayIgOiAibG9va3MifSBsaWtlIGEgbmFtZS4gVGhpcyB0b29sIGlzIG1lYW50IGZvciBjb2RlcyBvbmx5LiBVc2UgYW55d2F5P2ApOwp9Cgpkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCJjbGljayIsIGUgPT4gewogIGNvbnN0IHRhcCA9IGUudGFyZ2V0LmNsb3Nlc3QoIltkYXRhLXRhcF0iKTsKICBpZih0YXApeyBjb25zdCBpZCA9IHRhcC5kYXRhc2V0LnRhcCwgdiA9IE51bWJlcih0YXAuZGF0YXNldC52KTsgZHJhZnRbaWRdID0gZHJhZnRbaWRdID09PSB2ID8gdW5kZWZpbmVkIDogdjsgcmVuZGVyKCk7IHJldHVybjsgfQogIGNvbnN0IHNjID0gZS50YXJnZXQuY2xvc2VzdCgiW2RhdGEtc2NhbGVdIik7CiAgaWYoc2MpeyBzZXR1cFNjYWxlID0gc2MuZGF0YXNldC5zY2FsZTsgY29uc3Qga2VlcCA9IHsgc2tpbGw6IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzLXNraWxsIikudmFsdWUsIGNvZGVzOiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicy1jb2RlcyIpLnZhbHVlLCBuYW1lOiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicy1uYW1lIikudmFsdWUgfTsgcmVuZGVyKCk7IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzLXNraWxsIikudmFsdWUgPSBrZWVwLnNraWxsOyBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicy1jb2RlcyIpLnZhbHVlID0ga2VlcC5jb2RlczsgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInMtbmFtZSIpLnZhbHVlID0ga2VlcC5uYW1lOyByZXR1cm47IH0KICBjb25zdCBiID0gZS50YXJnZXQuY2xvc2VzdCgiW2RhdGEtYWN0XSIpOyBpZighYikgcmV0dXJuOwogIGNvbnN0IGcgPSBncm91cCgpLCBpZCA9IGIuZGF0YXNldC5pZDsKICBzd2l0Y2goYi5kYXRhc2V0LmFjdCl7CiAgICBjYXNlICJjcmVhdGUiOiB7CiAgICAgIGNvbnN0IGNvZGVzID0gY29kZXNGcm9tKGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzLWNvZGVzIikudmFsdWUpOwogICAgICBjb25zdCByYXdHb2FsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInMtZ29hbCIpLnZhbHVlLnRyaW0oKTsKICAgICAgY29uc3QgZ29hbCA9IHJhd0dvYWwgPT09ICIiID8gTmFOIDogTnVtYmVyKHJhd0dvYWwpOwogICAgICBpZighY29kZXMubGVuZ3RoKXsgYWxlcnQoIkFkZCBhdCBsZWFzdCBvbmUgc3R1ZGVudCBjb2RlLiIpOyByZXR1cm47IH0KICAgICAgaWYoIWdvYWxPSyhzZXR1cFNjYWxlLCBnb2FsKSl7IGFsZXJ0KHNldHVwU2NhbGUgPT09ICJydWJyaWMiID8gIkVudGVyIGEgZ29hbCBmcm9tIDEgdG8gNC4iIDogIkVudGVyIGEgZ29hbCBmcm9tIDAgdG8gMTAwLiIpOyByZXR1cm47IH0KICAgICAgaWYoIW9rQ29kZXMoY29kZXMpKSByZXR1cm47CiAgICAgIGNvbnN0IHNraWxsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInMtc2tpbGwiKS52YWx1ZTsKICAgICAgY29uc3QgbmFtZSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzLW5hbWUiKS52YWx1ZS50cmltKCkgfHwgU0tJTExTW3NraWxsXS5sYWJlbDsKICAgICAgY29uc3QgbmcgPSB7IGlkOiB1aWQoKSwgbmFtZSwgc2tpbGwsIHNjYWxlOiBzZXR1cFNjYWxlLCBnb2FsLCBzdHVkZW50czogY29kZXMubWFwKGMgPT4gKHsgaWQ6IHVpZCgpLCBjb2RlOiBjIH0pKSwgY2hlY2tzOiBbXSB9OwogICAgICBzdGF0ZS5ncm91cHMucHVzaChuZyk7IHN0YXRlLmFjdGl2ZUlkID0gbmcuaWQ7IHZpZXcgPSAiaG9tZSI7IGRyYWZ0ID0ge307IHNhdmUoKTsgcmVuZGVyKCk7IGJyZWFrOwogICAgfQogICAgY2FzZSAiY2FuY2VsIjogdmlldyA9ICJob21lIjsgcmVuZGVyKCk7IGJyZWFrOwogICAgY2FzZSAic2F2ZXNjb3JlcyI6IHsKICAgICAgY29uc3QgZGF0ZSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJjZGF0ZSIpLnZhbHVlIHx8IHRvZGF5KCk7CiAgICAgIGNvbnN0IHNjb3JlcyA9IHt9OwogICAgICBPYmplY3QuZW50cmllcyhkcmFmdCkuZm9yRWFjaCgoW2ssdl0pID0+IHsgaWYodHlwZW9mIHYgPT09ICJudW1iZXIiICYmICFpc05hTih2KSkgc2NvcmVzW2tdID0gdjsgfSk7CiAgICAgIGlmKCFPYmplY3Qua2V5cyhzY29yZXMpLmxlbmd0aCl7IGZsYXNoID0geyB0OiJFbnRlciBhdCBsZWFzdCBvbmUgc2NvcmUuIiwgazoiYmFkIiB9OyByZW5kZXIoKTsgcmV0dXJuOyB9CiAgICAgIGNvbnN0IG91dE9mUmFuZ2UgPSBnLnN0dWRlbnRzLmZpbHRlcihzID0+IHMuaWQgaW4gc2NvcmVzICYmIChzY29yZXNbcy5pZF0gPCAwIHx8IHNjb3Jlc1tzLmlkXSA+IDEwMCkpLm1hcChzID0+IHMuY29kZSk7CiAgICAgIGlmKG91dE9mUmFuZ2UubGVuZ3RoKXsgZmxhc2ggPSB7IHQ6YFBlcmNlbnRzIGdvIGZyb20gMCB0byAxMDAuIENoZWNrICR7b3V0T2ZSYW5nZS5qb2luKCIsICIpfS5gLCBrOiJiYWQiIH07IHJlbmRlcigpOyByZXR1cm47IH0KICAgICAgY29uc3Qgc2FtZSA9IGcuY2hlY2tzLmZpbmQoYyA9PiBjLmRhdGUgPT09IGRhdGUpOwogICAgICBpZihzYW1lKSBPYmplY3QuYXNzaWduKHNhbWUuc2NvcmVzLCBzY29yZXMpOyBlbHNlIGcuY2hlY2tzLnB1c2goeyBpZDogdWlkKCksIGRhdGUsIHNjb3JlcyB9KTsKICAgICAgZHJhZnQgPSB7fTsgZmxhc2ggPSB7IHQ6YFNhdmVkIGZvciAke25pY2UoZGF0ZSl9LmAsIGs6Im9rIiB9OyBzYXZlKCk7IHJlbmRlcigpOyBicmVhazsKICAgIH0KICAgIGNhc2UgInRvZ2dsZSI6IG9wZW5baWRdID0gIW9wZW5baWRdOyByZW5kZXIoKTsgYnJlYWs7CiAgICBjYXNlICJwcmludCI6IHdpbmRvdy5wcmludCgpOyBicmVhazsKICAgIGNhc2UgImVkaXQiOiB2aWV3ID0gImVkaXQiOyByZW5kZXIoKTsgYnJlYWs7CiAgICBjYXNlICJuZXdncm91cCI6IHZpZXcgPSAic2V0dXAiOyBzZXR1cFNjYWxlID0gInJ1YnJpYyI7IHJlbmRlcigpOyBicmVhazsKICAgIGNhc2UgInNhdmVlZGl0IjogewogICAgICBjb25zdCByYXdHb2FsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImUtZ29hbCIpLnZhbHVlLnRyaW0oKTsKICAgICAgY29uc3QgZ29hbCA9IHJhd0dvYWwgPT09ICIiID8gTmFOIDogTnVtYmVyKHJhd0dvYWwpOwogICAgICBpZighZ29hbE9LKGcuc2NhbGUsIGdvYWwpKXsgYWxlcnQoZy5zY2FsZSA9PT0gInJ1YnJpYyIgPyAiRW50ZXIgYSBnb2FsIGZyb20gMSB0byA0LiIgOiAiRW50ZXIgYSBnb2FsIGZyb20gMCB0byAxMDAuIik7IHJldHVybjsgfQogICAgICBnLm5hbWUgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZS1uYW1lIikudmFsdWUudHJpbSgpIHx8IGcubmFtZTsKICAgICAgZy5za2lsbCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJlLXNraWxsIikudmFsdWU7CiAgICAgIGcuZ29hbCA9IGdvYWw7CiAgICAgIHZpZXcgPSAiaG9tZSI7IHNhdmUoKTsgcmVuZGVyKCk7IGJyZWFrOwogICAgfQogICAgY2FzZSAiYWRkc3R1IjogewogICAgICBjb25zdCBjb2RlcyA9IGNvZGVzRnJvbShkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiZS1uZXciKS52YWx1ZSkuZmlsdGVyKGMgPT4gIWcuc3R1ZGVudHMuc29tZShzID0+IHMuY29kZS50b0xvd2VyQ2FzZSgpID09PSBjLnRvTG93ZXJDYXNlKCkpKTsKICAgICAgaWYoIWNvZGVzLmxlbmd0aCB8fCAhb2tDb2Rlcyhjb2RlcykpIHJldHVybjsKICAgICAgY29kZXMuZm9yRWFjaChjID0+IGcuc3R1ZGVudHMucHVzaCh7IGlkOiB1aWQoKSwgY29kZTogYyB9KSk7IHNhdmUoKTsgcmVuZGVyS2VlcGluZ0VkaXRzKCk7IGJyZWFrOwogICAgfQogICAgY2FzZSAiZGVsc3R1IjogewogICAgICBjb25zdCBzID0gZy5zdHVkZW50cy5maW5kKHggPT4geC5pZCA9PT0gaWQpOwogICAgICBpZihzICYmIGNvbmZpcm0oYFJlbW92ZSAke3MuY29kZX0gYW5kIHRoZWlyIHNjb3Jlcz9gKSl7IGcuc3R1ZGVudHMgPSBnLnN0dWRlbnRzLmZpbHRlcih4ID0+IHguaWQgIT09IGlkKTsgZy5jaGVja3MuZm9yRWFjaChjID0+IGRlbGV0ZSBjLnNjb3Jlc1tpZF0pOyBzYXZlKCk7IHJlbmRlcktlZXBpbmdFZGl0cygpOyB9CiAgICAgIGJyZWFrOwogICAgfQogICAgY2FzZSAiZGVsY2hlY2siOiB7CiAgICAgIGNvbnN0IGMgPSBnLmNoZWNrcy5maW5kKHggPT4geC5pZCA9PT0gaWQpOwogICAgICBpZihjICYmIGNvbmZpcm0oYERlbGV0ZSB0aGUgc2NvcmVzIGZyb20gJHtuaWNlKGMuZGF0ZSl9P2ApKXsgZy5jaGVja3MgPSBnLmNoZWNrcy5maWx0ZXIoeCA9PiB4LmlkICE9PSBpZCk7IHNhdmUoKTsgcmVuZGVyS2VlcGluZ0VkaXRzKCk7IH0KICAgICAgYnJlYWs7CiAgICB9CiAgICBjYXNlICJkZWxncm91cCI6CiAgICAgIGlmKGNvbmZpcm0oYERlbGV0ZSAiJHtnLm5hbWV9IiBhbmQgYWxsIGl0cyBzY29yZXM/YCkpeyBzdGF0ZS5ncm91cHMgPSBzdGF0ZS5ncm91cHMuZmlsdGVyKHggPT4geC5pZCAhPT0gZy5pZCk7IHN0YXRlLmFjdGl2ZUlkID0gc3RhdGUuZ3JvdXBzWzBdID8gc3RhdGUuZ3JvdXBzWzBdLmlkIDogbnVsbDsgdmlldyA9ICJob21lIjsgc2F2ZSgpOyByZW5kZXIoKTsgfQogICAgICBicmVhazsKICAgIGNhc2UgImJhY2t1cCI6IGRvd25sb2FkKCk7IGJyZWFrOwogICAgY2FzZSAicGljayI6IHN0YXRlLmFjdGl2ZUlkID0gaWQ7IGRyYWZ0ID0ge307IG9wZW4gPSB7fTsgdmlldyA9ICJob21lIjsgc2F2ZSgpOyByZW5kZXIoKTsgYnJlYWs7CiAgICBjYXNlICJyZXNldCI6IHJlc2V0T3BlbiA9IHRydWU7IHJlc2V0Q2hvaWNlID0gImdyb3VwIjsgcmVzZXRNc2cgPSAiIjsgcmVuZGVyKCk7IGJyZWFrOwogICAgY2FzZSAiZGxnLWNhbmNlbCI6IHJlc2V0T3BlbiA9IGZhbHNlOyByZW5kZXIoKTsgYnJlYWs7CiAgICBjYXNlICJkbGctZG93bmxvYWQiOiBkb3dubG9hZCgpOyByZXNldE1zZyA9ICJDb3B5IGRvd25sb2FkZWQuIFlvdSBjYW4gcmVzZXQgbm93LiI7IHJlbmRlcigpOyBicmVhazsKICAgIGNhc2UgImRsZy1yZXNldCI6IHsKICAgICAgcmVzZXRPcGVuID0gZmFsc2U7CiAgICAgIGlmKHJlc2V0Q2hvaWNlID09PSAiYWxsIil7IHN0YXRlID0geyBhY3RpdmVJZDpudWxsLCBncm91cHM6W10gfTsgdmlldyA9ICJzZXR1cCI7IH0KICAgICAgZWxzZSB7IGcuY2hlY2tzID0gW107IGZsYXNoID0geyB0OmBTY29yZXMgY2xlYXJlZCBmb3IgJHtnLm5hbWV9LmAsIGs6Im9rIiB9OyB9CiAgICAgIGRyYWZ0ID0ge307IG9wZW4gPSB7fTsgc2F2ZSgpOyByZW5kZXIoKTsgYnJlYWs7CiAgICB9CiAgICBjYXNlICJsb2FkY29weSI6IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJsb2FkRmlsZSIpLmNsaWNrKCk7IGJyZWFrOwogIH0KfSk7CmZ1bmN0aW9uIGRvd25sb2FkKCl7CiAgY29uc3QgYSA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoImEiKTsKICBhLmhyZWYgPSBVUkwuY3JlYXRlT2JqZWN0VVJMKG5ldyBCbG9iKFtKU09OLnN0cmluZ2lmeShzdGF0ZSwgbnVsbCwgMildLCB7IHR5cGU6ImFwcGxpY2F0aW9uL2pzb24iIH0pKTsKICBhLmRvd25sb2FkID0gYHF1aWNrLWNoZWNrLWNvcHktJHt0b2RheSgpfS5qc29uYDsKICBkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKGEpOyBhLmNsaWNrKCk7IGEucmVtb3ZlKCk7Cn0KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigia2V5ZG93biIsIGUgPT4geyBpZihlLmtleSA9PT0gIkVzY2FwZSIgJiYgcmVzZXRPcGVuKXsgcmVzZXRPcGVuID0gZmFsc2U7IHJlbmRlcigpOyB9IH0pOwpkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCJpbnB1dCIsIGUgPT4gewogIGlmKGUudGFyZ2V0LmlkID09PSAiY2RhdGUiKSBkcmFmdERhdGUgPSBlLnRhcmdldC52YWx1ZTsKICBpZihlLnRhcmdldC5kYXRhc2V0Lm5vdGUpeyBjb25zdCBnID0gZ3JvdXAoKTsgY29uc3Qgc3QgPSBnICYmIGcuc3R1ZGVudHMuZmluZCh4ID0+IHguaWQgPT09IGUudGFyZ2V0LmRhdGFzZXQubm90ZSk7IGlmKHN0KXsgc3Qubm90ZSA9IGUudGFyZ2V0LnZhbHVlOyBzYXZlKCk7IH0gfQogIGlmKGUudGFyZ2V0LmRhdGFzZXQucGN0KXsgY29uc3QgdiA9IGUudGFyZ2V0LnZhbHVlLnRyaW0oKTsgZHJhZnRbZS50YXJnZXQuZGF0YXNldC5wY3RdID0gdiA9PT0gIiIgPyB1bmRlZmluZWQgOiBOdW1iZXIodik7IH0KfSk7CmRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoImNoYW5nZSIsIGUgPT4gewogIGlmKGUudGFyZ2V0Lm5hbWUgPT09ICJycyIpeyByZXNldENob2ljZSA9IGUudGFyZ2V0LnZhbHVlOyB9Cn0pOwpkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibG9hZEZpbGUiKS5hZGRFdmVudExpc3RlbmVyKCJjaGFuZ2UiLCBlID0+IHsKICBjb25zdCBmID0gZS50YXJnZXQuZmlsZXNbMF07IGlmKCFmKSByZXR1cm47CiAgY29uc3QgcmQgPSBuZXcgRmlsZVJlYWRlcigpOwogIHJkLm9ubG9hZCA9ICgpID0+IHsKICAgIHRyeXsKICAgICAgY29uc3QgcyA9IGNsZWFuKEpTT04ucGFyc2UocmQucmVzdWx0KSk7IGlmKCFzKSB0aHJvdyAwOwogICAgICBpZihzdGF0ZS5ncm91cHMubGVuZ3RoICYmICFjb25maXJtKCJMb2FkaW5nIGEgY29weSByZXBsYWNlcyB3aGF0J3MgaGVyZSBub3cuIENvbnRpbnVlPyIpKSByZXR1cm47CiAgICAgIHN0YXRlID0gczsgdmlldyA9ICJob21lIjsgc2F2ZSgpOyByZW5kZXIoKTsKICAgIH1jYXRjaChlcnIpeyBhbGVydCgiVGhhdCBmaWxlIGlzbid0IGEgUXVpY2sgQ2hlY2sgY29weS4iKTsgfQogIH07CiAgcmQucmVhZEFzVGV4dChmKTsgZS50YXJnZXQudmFsdWUgPSAiIjsKfSk7CgpyZW5kZXIoKTsKfSkoKTsKPC9zY3JpcHQ+CjwvYm9keT4KPC9odG1sPgo=";
+  document.getElementById("download-qc").addEventListener("click", function(){
+    var bin = atob(QUICK_CHECK_B64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([bytes], { type:"text/html" }));
+    a.download = "quick-check-tier2.html";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  });
+
+  /* ---------- Present mode ---------- */
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  slides.forEach(function(sl){
+    var f = document.createElement("div"); f.className = "fit";
+    while (sl.firstChild) f.appendChild(sl.firstChild);
+    sl.appendChild(f);
+  });
+  var cur = 0, presenting = false, count = document.getElementById("deck-count");
+
+  var fitQueued = false;
+  function queueFit(){
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function(){ fitQueued = false; fit(); });
+  }
+  function fit(){
+    if (!presenting) return;
+    // Try a few layout widths and keep whichever lets the slide display largest.
+    // Measure the slide itself, which fills the screen, so embedded previews scale correctly too.
+    var sl = slides[cur], f = sl.querySelector(".fit");
+    var vw = (sl.clientWidth || window.innerWidth) * 0.97, vh = (sl.clientHeight || window.innerHeight) * 0.95;
+    var best = { sc:0, w:1280 };
+    f.style.transform = "none";
+    [1280, 1440, 1600, 1760, 1920].forEach(function(w){
+      f.style.width = w + "px";
+      var sc = Math.min(vw / w, vh / (f.offsetHeight || 1));
+      if (sc > best.sc + 0.01) best = { sc:sc, w:w };
+    });
+    f.style.width = best.w + "px";
+    f.style.transform = "scale(" + best.sc + ")";
+  }
+  function show(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(sl, k){ sl.classList.toggle("active", k === cur); });
+    count.textContent = (cur + 1) + " / " + slides.length;
+    fit();
+  }
+  function enter(){
+    var start = 0;
+    slides.forEach(function(sl, k){ if (sl.getBoundingClientRect().top <= window.innerHeight * 0.4) start = k; });
+    presenting = true;
+    document.body.classList.add("present");
+    show(start);
+    var de = document.documentElement;
+    if (de.requestFullscreen){ de.requestFullscreen().catch(fsBlocked); }
+    else if (de.webkitRequestFullscreen){ de.webkitRequestFullscreen(); }
+    else { fsBlocked(); }
+  }
+  // Some embeds (iframes, previews) block full screen. Tell the presenter how to get it anyway.
+  var toast = document.getElementById("fs-toast");
+  function fsBlocked(){
+    toast.hidden = false;
+    setTimeout(function(){ toast.hidden = true; }, 5000);
+  }
+  function exit(){
+    if (!presenting) return;
+    presenting = false;
+    document.body.classList.remove("present");
+    slides.forEach(function(sl){ sl.classList.remove("active"); var f = sl.querySelector(".fit"); f.style.transform = ""; f.style.width = ""; });
+    if (document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
+    slides[cur].scrollIntoView({ block:"start" });
+  }
+  document.getElementById("present-btn").addEventListener("click", enter);
+  document.getElementById("deck-prev").addEventListener("click", function(){ show(cur - 1); });
+  document.getElementById("deck-next").addEventListener("click", function(){ show(cur + 1); });
+  document.getElementById("deck-exit").addEventListener("click", exit);
+  document.addEventListener("fullscreenchange", function(){
+    if (!document.fullscreenElement && presenting) exit();
+  });
+  document.addEventListener("keydown", function(e){
+    if (!presenting) return;
+    if (e.key === "Escape"){ exit(); return; }
+    if ((e.key === "f" || e.key === "F") && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))){
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().catch(fsBlocked); }
+      return;
+    }
+    var t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+    if (["ArrowRight","ArrowDown","PageDown"].indexOf(e.key) > -1){ e.preventDefault(); show(cur + 1); }
+    else if (["ArrowLeft","ArrowUp","PageUp"].indexOf(e.key) > -1){ e.preventDefault(); show(cur - 1); }
+    else if (e.key === "Home"){ e.preventDefault(); show(0); }
+    else if (e.key === "End"){ e.preventDefault(); show(slides.length - 1); }
+  });
+  /* ---------- Print: open collapsed prompts so they make it onto paper ---------- */
+  var closedForPrint = [];
+  window.addEventListener("beforeprint", function(){
+    closedForPrint = Array.prototype.filter.call(document.querySelectorAll("details"), function(d){ return !d.open; });
+    closedForPrint.forEach(function(d){ d.open = true; });
+  });
+  window.addEventListener("afterprint", function(){
+    closedForPrint.forEach(function(d){ d.open = false; });
+    closedForPrint = [];
+  });
+
+  window.addEventListener("resize", queueFit);
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(queueFit);
+    slides.forEach(function(sl){ ro.observe(sl.querySelector(".fit")); });
+  }
+
+})();
+</script>
+</body>
+</html>
